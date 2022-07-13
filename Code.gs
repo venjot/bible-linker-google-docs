@@ -111,15 +111,15 @@ const englishBibleBooks = new BibleLanguage("English", "en", [
   new BibleBook(55, "2 Timothy", "", "", false),
   new BibleBook(56, "Titus", "", "", false),
   new BibleBook(57, "Philemon", "", "", true),
-  new BibleBook(59, "Hebrews", "", "", false),
-  new BibleBook(60, "James", "", "", false),
-  new BibleBook(61, "1 Peter", "", "", false),
+  new BibleBook(58, "Hebrews", "", "", false),
+  new BibleBook(59, "James", "", "", false),
+  new BibleBook(60, "1 Peter", "", "", false),
   new BibleBook(61, "2 Peter", "", "", false),
   new BibleBook(62, "1 John", "", "", false),
   new BibleBook(63, "2 John", "", "", true),
   new BibleBook(64, "3 John", "", "", true),
   new BibleBook(65, "Jude", "", "", true),
-  new BibleBook(67, "Revelation", "", "", false),
+  new BibleBook(66, "Revelation", "", "", false),
 ]);
 
 const tagalogBibleBooks = new BibleLanguage("Tagalog", "tl", [
@@ -180,15 +180,15 @@ const tagalogBibleBooks = new BibleLanguage("Tagalog", "tl", [
   new BibleBook(55, "2 Timoteo", "", "", false),
   new BibleBook(56, "Tito", "", "", false),
   new BibleBook(57, "Filemon", "", "", true),
-  new BibleBook(59, "Hebreo", "", "", false),
-  new BibleBook(60, "Santiago", "", "", false),
-  new BibleBook(61, "1 Pedro", "", "", false),
+  new BibleBook(58, "Hebreo", "", "", false),
+  new BibleBook(59, "Santiago", "", "", false),
+  new BibleBook(60, "1 Pedro", "", "", false),
   new BibleBook(61, "2 Pedro", "", "", false),
   new BibleBook(62, "1 Juan", "", "", false),
   new BibleBook(63, "2 Juan", "", "", true),
   new BibleBook(64, "3 Juan", "", "", true),
   new BibleBook(65, "Judas", "", "", true),
-  new BibleBook(67, "Apocalipsis", "", "", false),
+  new BibleBook(66, "Apocalipsis", "", "", false),
 ]);
 class Bible {
   constructor(language, translation) {
@@ -506,10 +506,10 @@ function bibleLinker(bible_version) {
   for (let result of documentSearchResult) {
     for (let book of currentBibleVersion.getLanguage().getBooks()) {
       let bookName = book.getName();
-      let searchString = bookName + " [0-9]+:[0-9 ,;:-]+";
+      let searchString = '(?i)' + bookName + " [0-9]+:[0-9 ,;:-]+";
       Logger.log("searchString :" + searchString);
       if (book.isSingleChapter()) {
-        searchString = bookName + " [0-9 ,-]+";
+        searchString = '(?i)' + bookName + " [0-9 ,-]+";
       }
       var bibleTextSearchResults = new Array();
       var searchResult = result.getSearchElement().findText(searchString);
@@ -662,17 +662,12 @@ function parseBibleText(bibleTextStartIndex, content, bibleBook) {
             .toString()
             .replace(":", "");
           verse_end = bibleText[m]
-            .match(/[0-9]+$/)
+            .match(/[0-9]+\s*$/)
             .toString()
             .replace(":", "");
         } else {
-          if (bibleText[m].match(/ [0-9]+/)) {
-            verse_start = bibleText[m].match(/ [0-9]+/).toString();
-            verse_end = bibleText[m].match(/[0-9]+$/).toString();
-          } else {
-            verse_start = bibleText[m].match(/[0-9]+$/).toString();
-            verse_end = verse_start;
-          }
+            verse_start = bibleText[m].match(/\s[0-9]+/).toString();
+            verse_end = bibleText[m].match(/[0-9]+\s*$/).toString();
         }
         let verseLength = bibleText[m].trim().length;
         let start = bibleTextStartIndex + offset;
@@ -731,15 +726,15 @@ function parseBibleText(bibleTextStartIndex, content, bibleBook) {
 
       // Get verse(s)
       if (isSingleChapter) {
-        verse_start = bibleText.match(/ [0-9]+/).toString();
-        verse_end = bibleText.match(/[0-9]+$/).toString();
+        verse_start = bibleText.match(/\s[0-9]+/).toString();
+        verse_end = bibleText.match(/[0-9]+\s*$/).toString();
       } else {
         verse_start = bibleText
           .match(/:[0-9]+/)
           .toString()
           .replace(":", "");
         verse_end = bibleText
-          .match(/[0-9]+$/)
+          .match(/[0-9]+\s*$/)
           .toString()
           .replace(":", "");
       }
