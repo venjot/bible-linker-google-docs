@@ -250,7 +250,7 @@ class BibleSearchResult {
       .getText()
       .slice(
         this.content.getStartOffset(),
-        this.content.getEndOffsetInclusive()
+        this.content.getEndOffsetInclusive() + 1
       );
   }
 
