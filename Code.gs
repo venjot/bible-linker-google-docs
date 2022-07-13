@@ -551,6 +551,9 @@ function bibleLinker(bible_version) {
   } else {
     documentSearchResult.push(new SearchElement(doc.getBody()));
   }
+  var err_msg_title = "Oops!";
+  var err_msg1 = "There was an error processing this verse:\n\n";
+  var err_msg2 = "\n\nIs there a typo? (Tip: It's usually the spaces.)";
 
   for (let result of documentSearchResult) {
     for (let book of currentBibleVersion.getLanguage().getBooks()) {
@@ -580,47 +583,56 @@ function bibleLinker(bible_version) {
       }
 
       for (let bibleTextSearch of bibleTextSearchResults) {
-        for (let bibleTextParseResult of parseBibleText(
-          bibleTextSearch.getContent().getStartOffset(),
-          bibleTextSearch.getBibleText(),
-          book
-        )) {
-          let selectionStart = bibleTextSearch.getSelectionStart();
-          let selectionEnd = bibleTextSearch.getSelectionEnd();
-          let bibleTextOffsetStart = bibleTextParseResult.getOffsetStart();
-          let bibleTextOffsetEnd = bibleTextParseResult.getOffsetEnd();
-          Logger.log(
-            "selectionStart: " +
-              selectionStart +
-              ", selectionEnd: " +
-              selectionEnd +
-              ", bibleTextOffsetStart: " +
-              bibleTextOffsetStart +
-              ", bibleTextOffsetEnd: " +
-              bibleTextOffsetEnd +
-              ", Bible Text: " +
-              bibleTextSearch.getBibleText()
-          );
-          if (
-            shouldShowLink(
-              selectionStart,
-              selectionEnd,
-              bibleTextOffsetStart,
-              bibleTextOffsetEnd
-            )
-          ) {
-            bibleTextSearch
-              .getContent()
-              .getElement()
-              .setLinkUrl(
+        try {
+          for (let bibleTextParseResult of parseBibleText(
+            bibleTextSearch.getContent().getStartOffset(),
+            bibleTextSearch.getBibleText(),
+            book
+          )) {
+            let selectionStart = bibleTextSearch.getSelectionStart();
+            let selectionEnd = bibleTextSearch.getSelectionEnd();
+            let bibleTextOffsetStart = bibleTextParseResult.getOffsetStart();
+            let bibleTextOffsetEnd = bibleTextParseResult.getOffsetEnd();
+            Logger.log(
+              "selectionStart: " +
+                selectionStart +
+                ", selectionEnd: " +
+                selectionEnd +
+                ", bibleTextOffsetStart: " +
+                bibleTextOffsetStart +
+                ", bibleTextOffsetEnd: " +
+                bibleTextOffsetEnd +
+                ", Bible Text: " +
+                bibleTextSearch.getBibleText()
+            );
+            if (
+              shouldShowLink(
+                selectionStart,
+                selectionEnd,
                 bibleTextOffsetStart,
-                bibleTextOffsetEnd,
-                getBibleLink(
-                  bibleTextParseResult,
-                  currentBibleVersion.getTranslation()
-                )
-              );
+                bibleTextOffsetEnd
+              )
+            ) {
+              bibleTextSearch
+                .getContent()
+                .getElement()
+                .setLinkUrl(
+                  bibleTextOffsetStart,
+                  bibleTextOffsetEnd,
+                  getBibleLink(
+                    bibleTextParseResult,
+                    currentBibleVersion.getTranslation()
+                  )
+                );
+            }
           }
+        } catch {
+          var ui = DocumentApp.getUi();
+          ui.alert(
+            err_msg_title,
+            err_msg1 + bibleTextSearch.getBibleText() + err_msg2,
+            ui.ButtonSet.OK
+          );
         }
       }
     }
