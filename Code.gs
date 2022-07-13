@@ -1,570 +1,956 @@
 /* ***********************************************************************************
- * 
+ *
  *  Bible linker for Google Docs
- * 
+ *
  *  A Google Documents Apps Script that searches for Bible verses and creates links to a selection of online Bible sources.
- * 
+ *
  *  For more information, visit: https://github.com/majal/bible-linker-google-docs
  *
  *********************************************************************************** */
-
-
-function onInstall(e) {
-
-  onOpen(e);
-
-}
-
-
-function onOpen(e) {
-
-  // Get lastest used Bible version by user
-  if (e && e.authMode == ScriptApp.AuthMode.NONE) {
-    var last_used_bible_version = 'nwtsty_wol';
-  } else {
-    const userProperties = PropertiesService.getUserProperties();
-    var last_used_bible_version = userProperties.getProperty('last_used_bible_version');
-    if (last_used_bible_version == null) last_used_bible_version = 'nwtsty_wol';
+class BibleLanguage {
+  constructor(name, abbreviation, books) {
+    this.name = name;
+    this.abbreviation = abbreviation;
+    this.books = books;
   }
 
-  create_menu(last_used_bible_version);
+  getName() {
+    return this.name;
+  }
 
+  getAbbreviation() {
+    return this.abbreviation;
+  }
+
+  getBooks() {
+    return this.books;
+  }
+}
+class BibleBook {
+  constructor(index, name, abbr1, abbr2, issingleChapter) {
+    this.index = index;
+    this.name = name;
+    this.abbr1 = abbr1;
+    this.abbr2 = abbr2;
+    this.issingleChapter = issingleChapter;
+  }
+  getIndex() {
+    return this.index;
+  }
+  getName() {
+    return this.name;
+  }
+
+  getAbbr1() {
+    return this.abbr1;
+  }
+
+  getAbbr2() {
+    return this.abbr2;
+  }
+
+  isSingleChapter() {
+    return this.issingleChapter;
+  }
+}
+const englishBibleBooks = new BibleLanguage("English", "en", [
+  new BibleBook(1, "Genesis", "Ge", "Gen.", false),
+  new BibleBook(2, "Exodus", "Ex", "Ex.", false),
+  new BibleBook(3, "Leviticus", "Le", "Lev.", false),
+  new BibleBook(4, "Numbers", "Nu", "Num.", false),
+  new BibleBook(5, "Deuteronomy", "De", "Deut.", false),
+  new BibleBook(6, "Joshua", "", "", false),
+  new BibleBook(7, "Judges", "", "", false),
+  new BibleBook(8, "Ruth", "", "", false),
+  new BibleBook(9, "1 Samuel", "", "", false),
+  new BibleBook(10, "2 Samuel", "", "", false),
+  new BibleBook(11, "1 Kings", "", "", false),
+  new BibleBook(12, "2 Kings", "", "", false),
+  new BibleBook(13, "1 Chronicles", "", "", false),
+  new BibleBook(14, "2 Chronicles", "", "", false),
+  new BibleBook(15, "Ezra", "", "", false),
+  new BibleBook(16, "Nehemiah", "", "", false),
+  new BibleBook(17, "Esther", "", "", false),
+  new BibleBook(18, "Job", "", "", false),
+  new BibleBook(19, "Psalm", "", "", false),
+  new BibleBook(20, "Proverbs", "", "", false),
+  new BibleBook(21, "Ecclesiastes", "", "", false),
+  new BibleBook(22, "Song of Solomon", "", "", false),
+  new BibleBook(23, "Isaiah", "", "", false),
+  new BibleBook(24, "Jeremiah", "", "", false),
+  new BibleBook(25, "Lamentations", "", "", false),
+  new BibleBook(26, "Ezekiel", "", "", false),
+  new BibleBook(27, "Daniel", "", "", false),
+  new BibleBook(28, "Hosea", "", "", false),
+  new BibleBook(29, "Joel", "", "", false),
+  new BibleBook(30, "Amos", "", "", false),
+  new BibleBook(31, "Obadiah", "", "", true),
+  new BibleBook(32, "Jonah", "", "", false),
+  new BibleBook(33, "Micah", "", "", false),
+  new BibleBook(34, "Nahum", "", "", false),
+  new BibleBook(35, "Habakkuk", "", "", false),
+  new BibleBook(36, "Zephaniah", "", "", false),
+  new BibleBook(37, "Haggai", "", "", false),
+  new BibleBook(38, "Zechariah", "", "", false),
+  new BibleBook(39, "Malachi", "", "", false),
+  new BibleBook(40, "Matthew", "", "", false),
+  new BibleBook(41, "Mark", "", "", false),
+  new BibleBook(42, "Luke", "", "", false),
+  new BibleBook(43, "John", "", "", false),
+  new BibleBook(44, "Acts", "", "", false),
+  new BibleBook(45, "Romans", "", "", false),
+  new BibleBook(46, "1 Corinthians", "", "", false),
+  new BibleBook(47, "2 Corinthians", "", "", false),
+  new BibleBook(48, "Galatians", "", "", false),
+  new BibleBook(49, "Ephesians", "", "", false),
+  new BibleBook(50, "Philippians", "", "", false),
+  new BibleBook(51, "Colossians", "", "", false),
+  new BibleBook(52, "1 Thessalonians", "", "", false),
+  new BibleBook(53, "2 Thessalonians", "", "", false),
+  new BibleBook(54, "1 Timothy", "", "", false),
+  new BibleBook(55, "2 Timothy", "", "", false),
+  new BibleBook(56, "Titus", "", "", false),
+  new BibleBook(57, "Philemon", "", "", true),
+  new BibleBook(59, "Hebrews", "", "", false),
+  new BibleBook(60, "James", "", "", false),
+  new BibleBook(61, "1 Peter", "", "", false),
+  new BibleBook(61, "2 Peter", "", "", false),
+  new BibleBook(62, "1 John", "", "", false),
+  new BibleBook(63, "2 John", "", "", true),
+  new BibleBook(64, "3 John", "", "", true),
+  new BibleBook(65, "Jude", "", "", true),
+  new BibleBook(67, "Revelation", "", "", false),
+]);
+
+const tagalogBibleBooks = new BibleLanguage("Tagalog", "tl", [
+  new BibleBook(1, "Genesis", "", "", false),
+  new BibleBook(2, "Exodus", "", "", false),
+  new BibleBook(3, "Levitico", "", "", false),
+  new BibleBook(4, "Bilang", "", "", false),
+  new BibleBook(5, "Deutoronomio", "", "", false),
+  new BibleBook(6, "Josue", "", "", false),
+  new BibleBook(7, "Hukom", "", "", false),
+  new BibleBook(8, "Ruth", "", "", false),
+  new BibleBook(9, "1 Samuel", "", "", false),
+  new BibleBook(10, "2 Samuel", "", "", false),
+  new BibleBook(11, "1 Hari", "", "", false),
+  new BibleBook(12, "2 Hari", "", "", false),
+  new BibleBook(13, "1 Cronica", "", "", false),
+  new BibleBook(14, "2 Cronica", "", "", false),
+  new BibleBook(15, "Ezra", "", "", false),
+  new BibleBook(16, "Nehemias", "", "", false),
+  new BibleBook(17, "Esther", "", "", false),
+  new BibleBook(18, "Job", "", "", false),
+  new BibleBook(19, "Awit", "", "", false),
+  new BibleBook(20, "Kawikaan", "", "", false),
+  new BibleBook(21, "Eclesiastes", "", "", false),
+  new BibleBook(22, "Awit ni Solomon", "", "", false),
+  new BibleBook(23, "Isaias", "", "", false),
+  new BibleBook(24, "Jeremias", "", "", false),
+  new BibleBook(25, "Panaghoy", "", "", false),
+  new BibleBook(26, "Ezekiel", "", "", false),
+  new BibleBook(27, "Daniel", "", "", false),
+  new BibleBook(28, "Oseas", "", "", false),
+  new BibleBook(29, "Joel", "", "", false),
+  new BibleBook(30, "Amos", "", "", false),
+  new BibleBook(31, "Obadias", "", "", true),
+  new BibleBook(32, "Jonas", "", "", false),
+  new BibleBook(33, "Mikas", "", "", false),
+  new BibleBook(34, "Nahum", "", "", false),
+  new BibleBook(35, "Habakuk", "", "", false),
+  new BibleBook(36, "Zefanias", "", "", false),
+  new BibleBook(37, "Hagai", "", "", false),
+  new BibleBook(38, "Zacarias", "", "", false),
+  new BibleBook(39, "Malakias", "", "", false),
+  new BibleBook(40, "Mateo", "", "", false),
+  new BibleBook(41, "Marcos", "", "", false),
+  new BibleBook(42, "Lucas", "", "", false),
+  new BibleBook(43, "Juan", "", "", false),
+  new BibleBook(44, "Gawa", "", "", false),
+  new BibleBook(45, "Roma", "", "", false),
+  new BibleBook(46, "1 Corinto", "", "", false),
+  new BibleBook(47, "2 Corinto", "", "", false),
+  new BibleBook(48, "Galacia", "", "", false),
+  new BibleBook(49, "Efeso", "", "", false),
+  new BibleBook(50, "Filipos", "", "", false),
+  new BibleBook(51, "Colosas", "", "", false),
+  new BibleBook(52, "1 Tesalonica", "", "", false),
+  new BibleBook(53, "2 Tesalonica", "", "", false),
+  new BibleBook(54, "1 Timoteo", "", "", false),
+  new BibleBook(55, "2 Timoteo", "", "", false),
+  new BibleBook(56, "Tito", "", "", false),
+  new BibleBook(57, "Filemon", "", "", true),
+  new BibleBook(59, "Hebreo", "", "", false),
+  new BibleBook(60, "Santiago", "", "", false),
+  new BibleBook(61, "1 Pedro", "", "", false),
+  new BibleBook(61, "2 Pedro", "", "", false),
+  new BibleBook(62, "1 Juan", "", "", false),
+  new BibleBook(63, "2 Juan", "", "", true),
+  new BibleBook(64, "3 Juan", "", "", true),
+  new BibleBook(65, "Judas", "", "", true),
+  new BibleBook(67, "Apocalipsis", "", "", false),
+]);
+class Bible {
+  constructor(language, translation) {
+    this.language = language;
+    this.translation = translation;
+  }
+  getLanguage() {
+    return this.language;
+  }
+
+  getTranslation() {
+    return this.translation;
+  }
+}
+class BibleTranslation {
+  constructor(version, name, url, hash1, hash2) {
+    this.version = version;
+    this.name = name;
+    this.url = url;
+    this.hash1 = hash1;
+    this.hash2 = hash2;
+  }
+
+  getVersion() {
+    return this.version;
+  }
+
+  getName() {
+    return this.name;
+  }
+
+  getUrl() {
+    return this.url;
+  }
+
+  getHash1() {
+    return this.hash1;
+  }
+
+  getHash2() {
+    return this.hash2;
+  }
 }
 
+class BibleSearchResult {
+  constructor(content, selectionStart, selectionEnd) {
+    this.content = content;
+    this.selectionStart = selectionStart;
+    this.selectionEnd = selectionEnd;
+  }
+  getContent() {
+    return this.content;
+  }
 
-function create_menu(last_used_bible_version) {
+  getBibleText() {
+    return this.content
+      .getElement()
+      .asText()
+      .getText()
+      .slice(
+        this.content.getStartOffset(),
+        this.content.getEndOffsetInclusive()
+      );
+  }
+
+  getSelectionStart() {
+    return this.selectionStart;
+  }
+
+  getSelectionEnd() {
+    return this.selectionEnd;
+  }
+}
+class SearchElement {
+  constructor(searchElement, selectionStart, selectionEnd) {
+    this.searchElement = searchElement;
+    this.selectionStart = selectionStart;
+    this.selectionEnd = selectionEnd;
+  }
+  getSearchElement() {
+    return this.searchElement;
+  }
+  getSelectionStart() {
+    return this.selectionStart;
+  }
+  getSelectionEnd() {
+    return this.selectionEnd;
+  }
+}
+
+function getBibleLink(bibleText, bibleTranslation) {
+  if (bibleTranslation.getHash1() != "") {
+    if (
+      bibleText.getChapterStart() == bibleText.getChapterEnd() &&
+      bibleText.getVerseStart() == bibleText.getVerseEnd()
+    ) {
+      return (
+        bibleTranslation.getUrl() + bibleText.getBibleBook().getIndex() + "/"
+      );
+      bibleText.getChapterStart() +
+        bibleTranslation.getHash1() +
+        bibleText.getVerseStart() +
+        bibleTranslation.getHash2() +
+        bibleText.getBibleBook().getIndex() +
+        ":" +
+        bibleText.getChapterStart() +
+        ":" +
+        bibleText.getVerseStart();
+    } else {
+      return (
+        bibleTranslation.getUrl() + bibleText.getBibleBook().getIndex() + "/"
+      );
+      bibleText.getChapterStart() +
+        bibleTranslation.getHash1() +
+        bibleText.getVerseStart() +
+        bibleTranslation.getHash2() +
+        bibleText.getBibleBook().getIndex() +
+        ":" +
+        bibleText.getChapterStart() +
+        ":" +
+        bibleText.getVerseStart() +
+        "-" +
+        bibleText.getBibleBook().getIndex() +
+        ":" +
+        bibleText.getChapterEnd() +
+        bibleText.getVerseEnd();
+    }
+  } else {
+    if (
+      bibleText.getChapterStart() == bibleText.getChapterEnd() &&
+      bibleText.getVerseStart() == bibleText.getVerseEnd()
+    ) {
+      return (
+        bibleTranslation.getUrl() +
+        bibleText.getBibleBook().getIndex() +
+        String(bibleText.getChapterStart()).padStart(3, "0") +
+        String(bibleText.getVerseStart()).padStart(3, "0")
+      );
+    } else {
+      return (
+        bibleTranslation.getUrl() +
+        bibleText.getBibleBook().getIndex() +
+        String(bibleText.getChapterStart()).padStart(3, "0") +
+        String(bibleText.getVerseStart()).padStart(3, "0") +
+        "-" +
+        bibleText.getBibleBook().getIndex() +
+        String(bibleText.getChapterEnd()).padStart(3, "0") +
+        String(bibleText.getVerseEnd()).padStart(3, "0")
+      );
+    }
+  }
+}
+class BibleTextParseResult {
+  constructor(
+    bibleBook,
+    chapterStart,
+    chapterEnd,
+    verseStart,
+    verseEnd,
+    offsetStart,
+    offsetEnd
+  ) {
+    this.bibleBook = bibleBook;
+    this.chapterStart = chapterStart;
+    this.chapterEnd = parseInt(chapterEnd, 10);
+    this.verseStart = parseInt(verseStart, 10);
+    this.verseEnd = parseInt(verseEnd, 10);
+    this.offsetStart = offsetStart;
+    this.offsetEnd = offsetEnd;
+  }
+
+  getBibleBook() {
+    return this.bibleBook;
+  }
+
+  getChapterStart() {
+    return this.chapterStart;
+  }
+
+  getChapterEnd() {
+    return this.chapterEnd;
+  }
+
+  getVerseStart() {
+    return this.verseStart;
+  }
+
+  getVerseEnd() {
+    return this.verseEnd;
+  }
+
+  getOffsetStart() {
+    return this.offsetStart;
+  }
+
+  getOffsetEnd() {
+    return this.offsetEnd;
+  }
+}
+
+function onInstall(e) {
+  onOpen(e);
+}
+
+function onOpen(e) {
+  create_menu();
+}
+
+function getLanguages() {
+  return [englishBibleBooks, tagalogBibleBooks];
+}
+
+function create_menu() {
+  // Get lastest used Bible version by user
+  const userProperties = PropertiesService.getUserProperties();
+  var last_used_bible_version = userProperties.getProperty(
+    "last_used_bible_version"
+  );
+  if (last_used_bible_version == null) last_used_bible_version = "nwtsty_wol";
 
   // Pull supported Bible versions
-  const bible_versions = consts('bible_versions');
-  const bible_versions_keys = Object.keys(bible_versions);
+  const bibleVersions = getBibleVersions();
+  const bibleNames = Object.assign(
+    {},
+    ...bibleVersions.map((x) => ({
+      [x.getTranslation().getVersion()]: x.getTranslation().getName(),
+    }))
+  );
 
   // Set lastest used Bible version to the menu
-  let last_used_bible_label = bible_versions[last_used_bible_version];
-  let dynamic_name_bible_linker = 'bible_linker_' + last_used_bible_version;
-  let search_label = '🔗  Link verses using ' + last_used_bible_label;
+  let last_used_bible_label = bibleNames[last_used_bible_version];
+  let dynamic_name_bible_linker = "bible_linker_" + last_used_bible_version;
+  let search_label = "🔗⠀Link verses using " + last_used_bible_label;
 
   // Set menu
   var ui = DocumentApp.getUi();
-  var menu = ui.createMenu('Bible Linker')
-    .addItem(search_label, dynamic_name_bible_linker)
+  var menu = ui
+    .createMenu("Bible Linker")
+    .addItem(search_label, dynamic_name_bible_linker);
 
   // Set Bible version dynamic submenus
-  var submenu_bible_ver = ui.createMenu('📖  Choose Bible version');
-  for (let n=0; n < bible_versions_keys.length; n++) {
-    let key = bible_versions_keys[n];
-    let dynamic_name_bible_linker = 'bible_linker_' + key;
-    let last_used_pointer = (last_used_bible_version == key) ? '▸  ' : '    ';
-    submenu_bible_ver.addItem(last_used_pointer + bible_versions[key], dynamic_name_bible_linker);
+  var bibleSubMenu = ui.createMenu("📖⠀Choose language and version ");
+  let languages = getLanguages();
+  for (let language of languages) {
+    var bibleLanguageSubmenu = ui.createMenu(language.getName());
+    for (let bibleVersion of bibleVersions.filter(
+      (b) => b.getLanguage().getAbbreviation() == language.getAbbreviation()
+    )) {
+      let key = bibleVersion.getTranslation().getVersion();
+      let dynamic_name_bible_linker = "bible_linker_" + key;
+      let last_used_pointer = last_used_bible_version == key ? "▸ ⠀" : "⠀⠀";
+      bibleLanguageSubmenu.addItem(
+        last_used_pointer + bibleVersion.getTranslation().getName(),
+        dynamic_name_bible_linker
+      );
+    }
+    bibleSubMenu.addSubMenu(bibleLanguageSubmenu);
   }
 
-  // Create menu 
+  // Create menu
   menu
-    .addSubMenu(submenu_bible_ver)
+    .addSubMenu(bibleSubMenu)
     .addSeparator()
-    .addItem('📝  Study tools', 'study_tools')
+    .addItem("📝  Study tools", "study_tools")
     .addToUi();
-
 }
-
 
 // Dynamic menu hack
-const bible_versions = consts('bible_versions');
-const bible_versions_keys = Object.keys(bible_versions);
-for (let n=0; n < bible_versions_keys.length; n++) {
-  let key = bible_versions_keys[n];
-  let dynamic_name_bible_linker = 'bible_linker_' + key;
-  this[dynamic_name_bible_linker] = function() { bible_linker(key); };
+const bibleVersions = getBibleVersions();
+for (let bibleVersion of bibleVersions) {
+  let key = bibleVersion.getTranslation().getVersion();
+  let dynamic_name_bible_linker = "bible_linker_" + key;
+  this[dynamic_name_bible_linker] = function () {
+    bibleLinker(key);
+  };
 }
 
-
-function bible_linker(bible_version) {
-
-  // Initialize Google Docs
-  var doc = DocumentApp.getActiveDocument();
-
+function bibleLinker(bible_version) {
   // Set the latest used Bible version
-  if (bible_version == undefined || bible_version == null) bible_version = 'nwtsty_wol';
+  if (bible_version == undefined || bible_version == null)
+    bible_version = "nwt";
   const userProperties = PropertiesService.getUserProperties();
-  userProperties.setProperty('last_used_bible_version', bible_version);
-  create_menu(bible_version);
+  userProperties.setProperty("last_used_bible_version", bible_version);
 
-  // Get names of Bible books
-  var nwt_bookName = consts('nwt_bookName');
-  var nwt_bookAbbrev1 = consts('nwt_bookAbbrev1');
-  var nwt_bookAbbrev2 = consts('nwt_bookAbbrev2');
+  create_menu();
 
-  // Run parser for each Bible name
-  for (let n=0; n < nwt_bookName.length; n++) {
-    if (Array.isArray(nwt_bookName[n])) {
-      for (let m=0; m < nwt_bookName[n].length; m++) {
-        bible_search(doc, bible_version, nwt_bookName[n][m], n+1);
-      }
-    } else {
-      bible_search(doc, bible_version, nwt_bookName[n], n+1);
+  let currentBibleVersion;
+  for (let bibleVersion of getBibleVersions()) {
+    if (bibleVersion.getTranslation().getVersion() === bible_version) {
+      currentBibleVersion = bibleVersion;
+      break;
     }
   }
 
-  for (let n=0; n < nwt_bookAbbrev1.length; n++) {
-    bible_search(doc, bible_version, nwt_bookAbbrev1[n], n+1);
-  }
-  for (let n=0; n < nwt_bookAbbrev2.length; n++) {
-    bible_search(doc, bible_version, nwt_bookAbbrev2[n], n+1);
-  }
-}
+  var doc = DocumentApp.getActiveDocument();
+  let selection = doc.getSelection();
+  let documentSearchResult = new Array();
 
-
-function bible_search(doc, bible_version, bible_name, bible_num) {
-
-  // Set variables and constants
-  var single_chapters = consts('single_chapter_bible_nums');
-  var search_field, search_result;
-  var selection = doc.getSelection();
-
-  var err_msg_title = 'Oops!';
-  var err_msg1 = 'There was an error processing this verse:\n\n';
-  var err_msg2 = "\n\nIs there a typo? (Tip: It's usually the spaces.)";
-
-  // Search for Bible references
-  if (single_chapters.includes(bible_num)) {
-    var search_string = '(?i)' + bible_name + ' [0-9 ,-]+';
-  } else {
-    var search_string = '(?i)' + bible_name + ' [0-9]+:[0-9 ,;:-]+';
-  }
-
-  // Check if selection is present and only process that
   if (selection) {
-    var range_elements = selection.getRangeElements();
+    var rangeElements = selection.getRangeElements();
+    for (let n = 0; n < rangeElements.length; n++) {
+      let rangeElement = rangeElements[n];
+      documentSearchResult.push(
+        new SearchElement(
+          rangeElement.getElement(),
+          rangeElement.getStartOffset(),
+          rangeElement.getEndOffsetInclusive()
+        )
+      );
+    }
+  } else {
+    documentSearchResult.push(new SearchElement(doc.getBody()));
+  }
 
-    // Search within each selection element and pass results to parser 
-    for (let n=0; n < range_elements.length; n++) {
-      search_field = range_elements[n].getElement();
-      search_result = search_field.findText(search_string);
+  for (let result of documentSearchResult) {
+    for (let book of currentBibleVersion.getLanguage().getBooks()) {
+      let bookName = book.getName();
+      let searchString = bookName + " [0-9]+:[0-9 ,;:-]+";
+      Logger.log("searchString :" + searchString);
+      if (book.isSingleChapter()) {
+        searchString = bookName + " [0-9 ,-]+";
+      }
+      var bibleTextSearchResults = new Array();
+      var searchResult = result.getSearchElement().findText(searchString);
 
-      // Note if selection is only a part of the element (single line)
-      search_field_start = range_elements[n].getStartOffset();
-      search_field_end = range_elements[n].getEndOffsetInclusive();
-      
-      // Because the parser can hit unexpected errors with typos ;-)
-      try {
+      while (searchResult != null) {
+        bibleTextSearchResults.push(
+          new BibleSearchResult(
+            searchResult,
+            result.getSelectionStart(),
+            result.getSelectionEnd()
+          )
+        );
 
-        // If whole line is selected start and end will be -1
-        if (search_field_start == -1 && search_field_end == -1) {
-          bible_parse(bible_version, bible_name, bible_num, search_result, search_field, search_string);
-        } else {
-          bible_parse(bible_version, bible_name, bible_num, search_result, search_field, search_string, search_field_start, search_field_end);
-        }
-        
-      } catch {
-
-        // Show text where error occurred
-        var ui = DocumentApp.getUi();
-        let search_result_text_slice = search_result.getElement().asText().getText().slice(search_result.getStartOffset(), search_result.getEndOffsetInclusive() + 1);
-        ui.alert(err_msg_title, err_msg1 + search_result_text_slice + err_msg2, ui.ButtonSet.OK);
+        searchResult = result
+          .getSearchElement()
+          .findText(searchString, searchResult);
       }
 
+      for (let bibleTextSearch of bibleTextSearchResults) {
+        for (let bibleTextParseResult of parseBibleText(
+          bibleTextSearch.getContent().getStartOffset(),
+          bibleTextSearch.getBibleText(),
+          book
+        )) {
+          let selectionStart = bibleTextSearch.getSelectionStart();
+          let selectionEnd = bibleTextSearch.getSelectionEnd();
+          let bibleTextOffsetStart = bibleTextParseResult.getOffsetStart();
+          let bibleTextOffsetEnd = bibleTextParseResult.getOffsetEnd();
+          Logger.log(
+            "selectionStart: " +
+              selectionStart +
+              ", selectionEnd: " +
+              selectionEnd +
+              ", bibleTextOffsetStart: " +
+              bibleTextOffsetStart +
+              ", bibleTextOffsetEnd: " +
+              bibleTextOffsetEnd +
+              ", Bible Text: " +
+              bibleTextSearch.getBibleText()
+          );
+          if (
+            shouldShowLink(
+              selectionStart,
+              selectionEnd,
+              bibleTextOffsetStart,
+              bibleTextOffsetEnd
+            )
+          ) {
+            bibleTextSearch
+              .getContent()
+              .getElement()
+              .setLinkUrl(
+                bibleTextOffsetStart,
+                bibleTextOffsetEnd,
+                getBibleLink(
+                  bibleTextParseResult,
+                  currentBibleVersion.getTranslation()
+                )
+              );
+          }
+        }
+      }
     }
-
-  } else {
-
-    // Perform search on whole document
-    search_field = doc.getBody();
-    search_result = search_field.findText(search_string);
-
-    // Pass results to parser, and because the parser can hit unexpected errors with typos ;-)
-    try {
-      bible_parse(bible_version, bible_name, bible_num, search_result, search_field, search_string);
-    } catch {
-
-      // Show text where error occurred
-      var ui = DocumentApp.getUi();
-      let search_result_text_slice = search_result.getElement().asText().getText().slice(search_result.getStartOffset(), search_result.getEndOffsetInclusive() + 1);
-      ui.alert(err_msg_title, err_msg1 + search_result_text_slice + err_msg2, ui.ButtonSet.OK);
-    }
-
-  } 
-
+  }
 }
 
+function shouldShowLink(selectionStart, selectionEnd, offsetStart, offsetEnd) {
+  if (!selectionStart && !selectionEnd) {
+    return true;
+  }
 
-function bible_parse(bible_version, bible_name, bible_num, search_result, search_field, search_string, search_field_start, search_field_end) {
+  if (selectionStart == -1 && selectionEnd == -1) {
+    return true;
+  }
 
-  // Variable(s) and constant(s)
-  var single_chapters = consts('single_chapter_bible_nums');
+  if (offsetStart >= selectionStart && offsetEnd <= selectionEnd) {
+    return true;
+  }
 
-  // Cycle through each Bible reference found
-  while (search_result != null) {
+  return false;
+}
 
-    // Set reference start and end
-    var search_result_start = search_result.getStartOffset();
-    var search_result_end = search_result.getEndOffsetInclusive();
-
-    // Isolate reference only
-    var search_result_astext = search_result.getElement().asText();
-    var search_result_text = search_result_astext.getText();
-    var search_result_text_slice = search_result_text.slice(search_result_start, search_result_end + 1);
-
-    // Split at semicolon (;)
-    var bibleref_split = search_result_text_slice.split(';');
-  
-    // Retain verses only, remove if it does not contain colon (:), exception on single chapter books
-    for (let n=0; n < bibleref_split.length; n++) {
-      if (!single_chapters.includes(bible_num) && !bibleref_split[n].includes(':')) {
-        bibleref_split.splice(n, 1);
-        n--;
-      }
+function parseBibleText(bibleTextStartIndex, content, bibleBook) {
+  let bibleTextParseResults = new Array();
+  var bibleTexts = content.split(";");
+  let isSingleChapter = bibleBook.isSingleChapter();
+  let offset = 0;
+  // Retain verses only, remove if it does not contain colon (:), exception on single chapter books
+  for (let i = 0; i < bibleTexts.length; i++) {
+    if (!isSingleChapter && !bibleTexts[i].includes(":")) {
+      bibleTexts.splice(i, 1);
+      i--;
     }
+  }
 
-    // Split by comma (,)
-    for (let n=0; n < bibleref_split.length; n++) {
-      if (bibleref_split[n].includes(',')) {
-        bibleref_split[n] = bibleref_split[n].split(',');
+  // Split by comma (,)
+  for (let n = 0; n < bibleTexts.length; n++) {
+    let bibleText = bibleTexts[n];
+    if (bibleText.includes(",")) {
+      bibleTexts[n] = bibleText.split(",");
 
-        // Rejoin if verses are consecutive
-        if (Array.isArray(bibleref_split[n])) {
-          for (let m=1; m < bibleref_split[n].length; m++) {
-            if (parseInt(bibleref_split[n][m-1].match(/[0-9]+$/), 10) + 1 == parseInt(bibleref_split[n][m], 10)) {
-              bibleref_split[n][m-1] += ',' + bibleref_split[n][m];
-              bibleref_split[n].splice(m, 1);
-              m--;
-            }
+      // Rejoin if verses are consecutive
+      if (Array.isArray(bibleText)) {
+        for (let m = 1; m < bibleText.length; m++) {
+          if (
+            parseInt(bibleText[m - 1].match(/[0-9]+$/), 10) + 1 ==
+            parseInt(bibleText[m], 10)
+          ) {
+            bibleText[m - 1] += "," + bibleText[m];
+            bibleText.splice(m, 1);
+            m--;
           }
+        }
 
-          // Convert array to string if consecutive verses
-          if (bibleref_split[n].length == 1) {
-            bibleref_split[n] = bibleref_split[n][0].toString();
-          }
+        // Convert array to string if consecutive verses
+        if (bibleText.length == 1) {
+          bibleText = bibleText[0].toString();
         }
       }
     }
+  }
 
-    // Initialize vars and offsets
-    let select_start = 0;
-    let select_end = 0;
-    let url = '';
-    let offset_reference = 0;
+  for (let bibleText of bibleTexts) {
+    // Declare variable(s)
+    let chapters = [],
+      verse_start,
+      verse_end;
 
-    // Parse and process
-    for (let n=0; n < bibleref_split.length; n++) {
-
-      // Declare variable(s)
-      let chapters = [], verse_start, verse_end;
-
-      if (Array.isArray(bibleref_split[n])) {
-        for (let m=0; m < bibleref_split[n].length; m++) {
-
-          // Get chapter(s)
-          if (single_chapters.includes(bible_num)) {
-            chapters[0] = 1;
-            chapters[1] = 1;
-          } else {
-            chapters = bibleref_split[n][0].match(/[0-9]+:/g);
-            if (chapters.length == 1) {
-              chapters[0] = chapters[0].replace(':', '');
-              chapters[1] = chapters[0];
-            } else {
-              chapters[0] = chapters[0].replace(':', '');
-              chapters[1] = chapters[1].replace(':', '');
-            }
-          }
-
-          // Get verse(s)
-          if (bibleref_split[n][m].includes(':')) {
-            verse_start = bibleref_split[n][m].match(/:[0-9]+/).toString().replace(':', '');
-            verse_end = bibleref_split[n][m].match(/[0-9]+\s*$/).toString().replace(':', '');
-          } else {
-            verse_start = bibleref_split[n][m].match(/\s[0-9]+/).toString();
-            verse_end = bibleref_split[n][m].match(/[0-9]+\s*$/).toString();
-          }
-
-          // Get url link
-          url = get_url(bible_version, bible_num, chapters[0], chapters[1], verse_start, verse_end);
-
-          // Get url text ranges
-          let url_text_len = bibleref_split[n][m].trim().length;
-          select_start = search_result_start + offset_reference;
-          select_end = select_start + url_text_len - 1;
-          
-          // Set links if there is no selection or if selection exists and it is within the selection
-          if ((!search_field_start && !search_field_end) || (search_field_start == -1 && search_field_end == -1) || (select_start >= search_field_start && select_end <= search_field_end)) {
-            search_result_astext.setLinkUrl(select_start, select_end, url);
-          }
-          
-          // Add to reference offset, plus two for comma/colon and space
-          offset_reference += url_text_len + 2;
-        }
-
-      } else {
-
+    if (Array.isArray(bibleText)) {
+      for (let m = 0; m < bibleText.length; m++) {
         // Get chapter(s)
-        if (single_chapters.includes(bible_num)) {
+        if (isSingleChapter) {
           chapters[0] = 1;
           chapters[1] = 1;
         } else {
-          chapters = bibleref_split[n].match(/[0-9]+:/g);
+          chapters = bibleText[0].match(/[0-9]+:/g);
           if (chapters.length == 1) {
-            chapters[0] = chapters[0].replace(':', '');
+            chapters[0] = chapters[0].replace(":", "");
             chapters[1] = chapters[0];
           } else {
-            chapters[0] = chapters[0].replace(':', '');
-            chapters[1] = chapters[1].replace(':', '');
+            chapters[0] = chapters[0].replace(":", "");
+            chapters[1] = chapters[1].replace(":", "");
           }
         }
 
         // Get verse(s)
-        if (single_chapters.includes(bible_num)) {
-          verse_start = bibleref_split[n].match(/\s[0-9]+/).toString();
-          verse_end = bibleref_split[n].match(/[0-9]+\s*$/).toString();
+        if (bibleText[m].includes(":")) {
+          verse_start = bibleText[m]
+            .match(/:[0-9]+/)
+            .toString()
+            .replace(":", "");
+          verse_end = bibleText[m]
+            .match(/[0-9]+$/)
+            .toString()
+            .replace(":", "");
         } else {
-          verse_start = bibleref_split[n].match(/:[0-9]+/).toString().replace(':', '');
-          verse_end = bibleref_split[n].match(/[0-9]+\s*$/).toString().replace(':', '');
+          if (bibleText[m].match(/ [0-9]+/)) {
+            verse_start = bibleText[m].match(/ [0-9]+/).toString();
+            verse_end = bibleText[m].match(/[0-9]+$/).toString();
+          } else {
+            verse_start = bibleText[m].match(/[0-9]+$/).toString();
+            verse_end = verse_start;
+          }
         }
+        let verseLength = bibleText[m].trim().length;
+        let start = bibleTextStartIndex + offset;
+        let end = start + verseLength - 1;
+        Logger.log(
+          "Chapter Start: " +
+            chapters[0] +
+            ", Chapter End: " +
+            chapters[1] +
+            ", Verse Start: " +
+            verse_start +
+            ", Verse End: " +
+            verse_end
+        );
+        Logger.log(
+          "BibleText Start Index: " +
+            bibleTextStartIndex +
+            ", Bible Text:" +
+            bibleText[m] +
+            ", Start: " +
+            start +
+            ", End: " +
+            end +
+            ", Parse Bible Text: " +
+            content.slice(start, end + 1)
+        );
 
-        // Get url link
-        url = get_url(bible_version, bible_num, chapters[0], chapters[1], verse_start, verse_end);
-
-        // Get url text ranges
-        let url_text_len = bibleref_split[n].trim().length;
-        select_start = search_result_start + offset_reference;
-        select_end = select_start + url_text_len - 1;
-        
-        // Set links if there is no selection or if selection exists and it is within the selection
-        if ((!search_field_start && !search_field_end) || (search_field_start == -1 && search_field_end == -1) || (select_start >= search_field_start && select_end <= search_field_end)) { 
-          search_result_astext.setLinkUrl(select_start, select_end, url);
-        }
-
-        // Add to reference offset, plus two for comma/colon and space
-        offset_reference += url_text_len + 2
+        offset += verseLength + 2;
+        bibleTextParseResults.push(
+          new BibleTextParseResult(
+            bibleBook,
+            chapters[0],
+            chapters[1],
+            verse_start,
+            verse_end,
+            start,
+            end
+          )
+        );
       }
+    } else {
+      // Get chapter(s)
+      if (isSingleChapter) {
+        chapters[0] = 1;
+        chapters[1] = 1;
+      } else {
+        chapters = bibleText.match(/[0-9]+:/g);
+        if (chapters.length == 1) {
+          chapters[0] = chapters[0].replace(":", "");
+          chapters[1] = chapters[0];
+        } else {
+          chapters[0] = chapters[0].replace(":", "");
+          chapters[1] = chapters[1].replace(":", "");
+        }
+      }
+
+      // Get verse(s)
+      if (isSingleChapter) {
+        verse_start = bibleText.match(/ [0-9]+/).toString();
+        verse_end = bibleText.match(/[0-9]+$/).toString();
+      } else {
+        verse_start = bibleText
+          .match(/:[0-9]+/)
+          .toString()
+          .replace(":", "");
+        verse_end = bibleText
+          .match(/[0-9]+$/)
+          .toString()
+          .replace(":", "");
+      }
+      let verseLength = bibleText.trim().length;
+      let start = bibleTextStartIndex + offset;
+      let end = start + verseLength - 1;
+      Logger.log(
+        "Chapter Start: " +
+          chapters[0] +
+          ", Chapter End: " +
+          chapters[1] +
+          ", Verse Start: " +
+          verse_start +
+          ", Verse End: " +
+          verse_end
+      );
+
+      Logger.log(
+        "BibleText Start Index: " +
+          bibleTextStartIndex +
+          ", Bible Text:" +
+          bibleText +
+          ", Start: " +
+          start +
+          ", End: " +
+          end +
+          ", Parse Bible Text: " +
+          content.slice(start, end + 1)
+      );
+      offset += verseLength + 2;
+      bibleTextParseResults.push(
+        new BibleTextParseResult(
+          bibleBook,
+          chapters[0],
+          chapters[1],
+          verse_start,
+          verse_end,
+          start,
+          end
+        )
+      );
     }
-
-    // Find the next match
-    search_result = search_field.findText(search_string, search_result);
   }
 
+  return bibleTextParseResults;
 }
 
-
-function get_url(bible_version, bible_name_num, chapter_start, chapter_end, verse_start, verse_end) {
-
-  // Declare variables
-  var url_head, url_hash;
-
-  // Initialize integer values
-  chapter_start = parseInt(chapter_start, 10);
-  chapter_end = parseInt(chapter_end, 10);
-  verse_start = parseInt(verse_start, 10);
-  verse_end = parseInt(verse_end, 10);
-
-  // Choices from Bible versions
-  // Make sure to add entries in function consts(bible_versions)
-  switch (bible_version) {
-  
-    case 'nwt':
-      url_head = 'https://www.jw.org/finder?wtlocale=E&pub=nwt&bible=';
-
-      if (chapter_start == chapter_end && verse_start == verse_end) {
-        return url_head + bible_name_num + String(chapter_start).padStart(3, '0') + String(verse_start).padStart(3, '0');
-      } else {
-        return url_head + bible_name_num + String(chapter_start).padStart(3, '0') + String(verse_start).padStart(3, '0') + '-' + bible_name_num + String(chapter_end).padStart(3, '0') + String(verse_end).padStart(3, '0');
-      }
-    break;
-
-    case 'nwt_wol':
-      url_head = 'https://wol.jw.org/en/wol/b/r1/lp-e/nwt/';
-      url_hash1 = '#s=';
-      url_hash2 = '&study=discover&v=';
-
-      if (chapter_start == chapter_end && verse_start == verse_end) {
-        return url_head + bible_name_num + '/' + chapter_start + url_hash1 + verse_start + url_hash2 + bible_name_num + ':' + chapter_start + ':' + verse_start;
-      } else {
-        return url_head + bible_name_num + '/' + chapter_start + url_hash1 + verse_start + url_hash2 + bible_name_num + ':' + chapter_start + ':' + verse_start + '-' + bible_name_num + ':' + chapter_end + ':' + verse_end;
-      }
-    break;
-
-    case 'nwtsty':
-      url_head = 'https://www.jw.org/finder?wtlocale=E&pub=nwtsty&bible=';
-
-      if (chapter_start == chapter_end && verse_start == verse_end) {
-        return url_head + bible_name_num + String(chapter_start).padStart(3, '0') + String(verse_start).padStart(3, '0');
-      } else {
-        return url_head + bible_name_num + String(chapter_start).padStart(3, '0') + String(verse_start).padStart(3, '0') + '-' + bible_name_num + String(chapter_end).padStart(3, '0') + String(verse_end).padStart(3, '0');
-      }
-    break;
-
-    case 'nwtsty_wol':
-      url_head = 'https://wol.jw.org/en/wol/b/r1/lp-e/nwtsty/';
-      url_hash1 = '#s=';
-      url_hash2 = '&study=discover&v=';
-
-      if (chapter_start == chapter_end && verse_start == verse_end) {
-        return url_head + bible_name_num + '/' + chapter_start + url_hash1 + verse_start + url_hash2 + bible_name_num + ':' + chapter_start + ':' + verse_start;
-      } else {
-        return url_head + bible_name_num + '/' + chapter_start + url_hash1 + verse_start + url_hash2 + bible_name_num + ':' + chapter_start + ':' + verse_start + '-' + bible_name_num + ':' + chapter_end + ':' + verse_end;
-      }
-    break;
-      
-    case 'nwtrbi8':
-      url_head = 'https://www.jw.org/finder?wtlocale=E&pub=Rbi8&bible=';
-
-      if (chapter_start == chapter_end && verse_start == verse_end) {
-        return url_head + bible_name_num + String(chapter_start).padStart(3, '0') + String(verse_start).padStart(3, '0');
-      } else {
-        return url_head + bible_name_num + String(chapter_start).padStart(3, '0') + String(verse_start).padStart(3, '0') + '-' + bible_name_num + String(chapter_end).padStart(3, '0') + String(verse_end).padStart(3, '0');
-      }
-    break;
-
-    case 'nwtrbi8_wol':
-      url_head = 'https://wol.jw.org/en/wol/b/r1/lp-e/Rbi8/';
-      url_hash1 = '#s=';
-      url_hash2 = '&study=discover&v=';
-
-      if (chapter_start == chapter_end && verse_start == verse_end) {
-        return url_head + bible_name_num + '/' + chapter_start + url_hash1 + verse_start + url_hash2 + bible_name_num + ':' + chapter_start + ':' + verse_start;
-      } else {
-        return url_head + bible_name_num + '/' + chapter_start + url_hash1 + verse_start + url_hash2 + bible_name_num + ':' + chapter_start + ':' + verse_start + '-' + bible_name_num + ':' + chapter_end + ':' + verse_end;
-      }
-    break;
-
-    case 'kjv_jw':
-      url_head = 'https://www.jw.org/finder?wtlocale=E&pub=bi10&bible=';
-
-      if (chapter_start == chapter_end && verse_start == verse_end) {
-        return url_head + bible_name_num + String(chapter_start).padStart(3, '0') + String(verse_start).padStart(3, '0');
-      } else {
-        return url_head + bible_name_num + String(chapter_start).padStart(3, '0') + String(verse_start).padStart(3, '0') + '-' + bible_name_num + String(chapter_end).padStart(3, '0') + String(verse_end).padStart(3, '0');
-      }
-    break;
-
-    case 'kjw_wol':
-      url_head = 'https://wol.jw.org/en/wol/b/r1/lp-e/bi10/';
-      url_hash1 = '#s=';
-      url_hash2 = '&study=discover&v=';
-
-      if (chapter_start == chapter_end && verse_start == verse_end) {
-        return url_head + bible_name_num + '/' + chapter_start + url_hash1 + verse_start + url_hash2 + bible_name_num + ':' + chapter_start + ':' + verse_start;
-      } else {
-        return url_head + bible_name_num + '/' + chapter_start + url_hash1 + verse_start + url_hash2 + bible_name_num + ':' + chapter_start + ':' + verse_start + '-' + bible_name_num + ':' + chapter_end + ':' + verse_end;
-      }
-    break;
-
-  case 'by_jw':
-      url_head = 'https://www.jw.org/finder?wtlocale=E&pub=by&bible=';
-
-      if (chapter_start == chapter_end && verse_start == verse_end) {
-        return url_head + bible_name_num + String(chapter_start).padStart(3, '0') + String(verse_start).padStart(3, '0');
-      } else {
-        return url_head + bible_name_num + String(chapter_start).padStart(3, '0') + String(verse_start).padStart(3, '0') + '-' + bible_name_num + String(chapter_end).padStart(3, '0') + String(verse_end).padStart(3, '0');
-      }
-    break;
-
-    case 'by_wol':
-      url_head = 'https://wol.jw.org/en/wol/b/r1/lp-e/by/';
-      url_hash1 = '#s=';
-      url_hash2 = '&study=discover&v=';
-
-      if (chapter_start == chapter_end && verse_start == verse_end) {
-        return url_head + bible_name_num + '/' + chapter_start + url_hash1 + verse_start + url_hash2 + bible_name_num + ':' + chapter_start + ':' + verse_start;
-      } else {
-        return url_head + bible_name_num + '/' + chapter_start + url_hash1 + verse_start + url_hash2 + bible_name_num + ':' + chapter_start + ':' + verse_start + '-' + bible_name_num + ':' + chapter_end + ':' + verse_end;
-      }
-    break;
-
-case 'asv_jw':
-      url_head = 'https://www.jw.org/finder?wtlocale=E&pub=bi22&bible=';
-
-      if (chapter_start == chapter_end && verse_start == verse_end) {
-        return url_head + bible_name_num + String(chapter_start).padStart(3, '0') + String(verse_start).padStart(3, '0');
-      } else {
-        return url_head + bible_name_num + String(chapter_start).padStart(3, '0') + String(verse_start).padStart(3, '0') + '-' + bible_name_num + String(chapter_end).padStart(3, '0') + String(verse_end).padStart(3, '0');
-      }
-    break;
-
-    case 'asv_wol':
-      url_head = 'https://wol.jw.org/en/wol/b/r1/lp-e/bi22/';
-      url_hash1 = '#s=';
-      url_hash2 = '&study=discover&v=';
-
-      if (chapter_start == chapter_end && verse_start == verse_end) {
-        return url_head + bible_name_num + '/' + chapter_start + url_hash1 + verse_start + url_hash2 + bible_name_num + ':' + chapter_start + ':' + verse_start;
-      } else {
-        return url_head + bible_name_num + '/' + chapter_start + url_hash1 + verse_start + url_hash2 + bible_name_num + ':' + chapter_start + ':' + verse_start + '-' + bible_name_num + ':' + chapter_end + ':' + verse_end;
-      }
-    break;
-
-    case 'ebr_jw':
-      url_head = 'https://www.jw.org/finder?wtlocale=E&pub=rh&bible=';
-
-      if (chapter_start == chapter_end && verse_start == verse_end) {
-        return url_head + bible_name_num + String(chapter_start).padStart(3, '0') + String(verse_start).padStart(3, '0');
-      } else {
-        return url_head + bible_name_num + String(chapter_start).padStart(3, '0') + String(verse_start).padStart(3, '0') + '-' + bible_name_num + String(chapter_end).padStart(3, '0') + String(verse_end).padStart(3, '0');
-      }
-    break;
-
-    case 'ebr_wol':
-      url_head = 'https://wol.jw.org/en/wol/b/r1/lp-e/rh/';
-      url_hash1 = '#s=';
-      url_hash2 = '&study=discover&v=';
-
-      if (chapter_start == chapter_end && verse_start == verse_end) {
-        return url_head + bible_name_num + '/' + chapter_start + url_hash1 + verse_start + url_hash2 + bible_name_num + ':' + chapter_start + ':' + verse_start;
-      } else {
-        return url_head + bible_name_num + '/' + chapter_start + url_hash1 + verse_start + url_hash2 + bible_name_num + ':' + chapter_start + ':' + verse_start + '-' + bible_name_num + ':' + chapter_end + ':' + verse_end;
-      }
-    break;
-
-    default:
-      undefined;
-  }
-
+function getBibleVersions() {
+  return [
+    new Bible(
+      englishBibleBooks,
+      new BibleTranslation(
+        "nwt",
+        "New World Translation (NWT)",
+        "https://www.jw.org/finder?wtlocale=E&pub=nwt&bible=",
+        "",
+        ""
+      )
+    ),
+    new Bible(
+      englishBibleBooks,
+      new BibleTranslation(
+        "nwtsty",
+        "NWT Study Bible",
+        "https://www.jw.org/finder?wtlocale=E&pub=nwtsty&bible=",
+        "",
+        ""
+      )
+    ),
+    new Bible(
+      englishBibleBooks,
+      new BibleTranslation(
+        "wol_nwt",
+        "New World Translation (NWT) (WOL)",
+        "https://wol.jw.org/en/wol/b/r1/lp-e/nwt/",
+        "#s=",
+        "&study=discover&v="
+      )
+    ),
+    new Bible(
+      englishBibleBooks,
+      new BibleTranslation(
+        "wol_nwt",
+        "New World Translation (NWT) (WOL)",
+        "https://wol.jw.org/en/wol/b/r1/lp-e/nwt/",
+        "#s=",
+        "&study=discover&v="
+      )
+    ),
+    new Bible(
+      englishBibleBooks,
+      new BibleTranslation(
+        "nwtsty_wol",
+        "NWT Study Bible (WOL)",
+        "https://wol.jw.org/en/wol/b/r1/lp-e/nwtsty/",
+        "#s=",
+        "&study=discover&v="
+      )
+    ),
+    new Bible(
+      englishBibleBooks,
+      new BibleTranslation(
+        "nwtrbi8",
+        "NWT Reference Bible",
+        "https://www.jw.org/finder?wtlocale=E&pub=Rbi8&bible=",
+        "",
+        ""
+      )
+    ),
+    new Bible(
+      englishBibleBooks,
+      new BibleTranslation(
+        "nwtrbi8_wol",
+        "NWT Reference Bible (WOL)",
+        "https://wol.jw.org/en/wol/b/r1/lp-e/Rbi8/",
+        "#s=",
+        "&study=discover&v="
+      )
+    ),
+    new Bible(
+      englishBibleBooks,
+      new BibleTranslation(
+        "kjv_jw",
+        "King James Version of 1611",
+        "https://www.jw.org/finder?wtlocale=E&pub=bi10&bible=",
+        "",
+        ""
+      )
+    ),
+    new Bible(
+      englishBibleBooks,
+      new BibleTranslation(
+        "kjw_wol",
+        "King James Version of 1611 (WOL)",
+        "https://wol.jw.org/en/wol/b/r1/lp-e/bi10/",
+        "#s=",
+        "&study=discover&v="
+      )
+    ),
+    new Bible(
+      englishBibleBooks,
+      new BibleTranslation(
+        "by_jw",
+        "The Bible in Living English",
+        "https://www.jw.org/finder?wtlocale=E&pub=by&bible=",
+        "",
+        ""
+      )
+    ),
+    new Bible(
+      englishBibleBooks,
+      new BibleTranslation(
+        "by_wol",
+        "The Bible in Living English (WOL)",
+        "https://wol.jw.org/en/wol/b/r1/lp-e/by/",
+        "#s=",
+        "&study=discover&v="
+      )
+    ),
+    new Bible(
+      englishBibleBooks,
+      new BibleTranslation(
+        "asv_jw",
+        "American Standard Version",
+        "https://www.jw.org/finder?wtlocale=E&pub=bi22&bible=",
+        "",
+        ""
+      )
+    ),
+    new Bible(
+      englishBibleBooks,
+      new BibleTranslation(
+        "asv_wol",
+        "American Standard Version (WOL)",
+        "https://wol.jw.org/en/wol/b/r1/lp-e/bi22/",
+        "#s=",
+        "&study=discover&v="
+      )
+    ),
+    new Bible(
+      englishBibleBooks,
+      new BibleTranslation(
+        "ebr_jw",
+        "Emphasized Bible",
+        "https://www.jw.org/finder?wtlocale=E&pub=rh&bible=",
+        "",
+        ""
+      )
+    ),
+    new Bible(
+      englishBibleBooks,
+      new BibleTranslation(
+        "ebr_wol",
+        "Emphasized Bible (WOL)",
+        "https://wol.jw.org/en/wol/b/r1/lp-e/rh/",
+        "#s=",
+        "&study=discover&v="
+      )
+    ),
+    new Bible(
+      tagalogBibleBooks,
+      new BibleTranslation(
+        "nwt_tl",
+        "Edisyon sa Pag-aaral(NWT_TL)",
+        "https://www.jw.org/finder?wtlocale=TG&pub=nwtsty&bible=",
+        "",
+        ""
+      )
+    ),
+  ];
 }
-
-
-function consts(const_name) {
-  switch (const_name) {
-
-    case 'nwt_bookName':
-      return ["Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", ["Psalm", "Psalms"], "Proverbs", "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi", "Matthew", "Mark", "Luke", "John", "Acts", "Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians", "Philippians", "Colossians", "1 Thessalonians", "2 Thessalonians", "1 Timothy", "2 Timothy", "Titus", "Philemon", "Hebrews", "James", "1 Peter", "2 Peter", "1 John", "2 John", "3 John", "Jude", "Revelation"];
-      break;
-
-    case 'nwt_bookAbbrev1':
-      return ["Ge", "Ex", "Le", "Nu", "De", "Jos", "Jg", "Ru", "1Sa", "2Sa", "1Ki", "2Ki", "1Ch", "2Ch", "Ezr", "Ne", "Es", "Job", "Ps", "Pr", "Ec", "Ca", "Isa", "Jer", "La", "Eze", "Da", "Ho", "Joe", "Am", "Ob", "Jon", "Mic", "Na", "Hab", "Zep", "Hag", "Zec", "Mal", "Mt", "Mr", "Lu", "Joh", "Ac", "Ro", "1Co", "2Co", "Ga", "Eph", "Php", "Col", "1Th", "2Th", "1Ti", "2Ti", "Tit", "Phm", "Heb", "Jas", "1Pe", "2Pe", "1Jo", "2Jo", "3Jo", "Jude", "Re"];
-      break;
-
-    case 'nwt_bookAbbrev2':
-      return ["Gen.", "Ex.", "Lev.", "Num.", "Deut.", "Josh.", "Judg.", "Ruth", "1 Sam.", "2 Sam.", "1 Ki.", "2 Ki.", "1 Chron.", "2 Chron.", "Ezra", "Neh.", "Esther", "Job", "Ps.", "Prov.", "Eccl.", "Song of Sol.", "Isa.", "Jer.", "Lam.", "Ezek.", "Dan.", "Hos.", "Joel", "Amos", "Obad.", "Jonah", "Mic.", "Nah.", "Hab.", "Zeph.", "Hag.", "Zech.", "Mal.", "Matt.", "Mark", "Luke", "John", "Acts", "Rom.", "1 Cor.", "2 Cor.", "Gal.", "Eph.", "Phil.", "Col.", "1 Thess.", "2 Thess.", "1 Tim.", "2 Tim.", "Titus", "Philem.", "Heb.", "Jas.", "1 Pet.", "2 Pet.", "1 John", "2 John", "3 John", "Jude", "Rev."];
-      break;
-
-    case 'single_chapter_bible_nums':
-      return [31, 57, 63, 64, 65];
-      break;
-
-    // Make sure that entries below exist in function get_url > switch (bible_version)
-    case 'bible_versions':
-      return {
-        nwt: 'New World Translation (NWT)',
-        nwt_wol: 'New World Translation (NWT) (WOL)',
-        nwtsty: 'NWT Study Bible',
-        nwtsty_wol: 'NWT Study Bible (WOL)',
-        nwtrbi8: 'NWT Reference Bible',
-        nwtrbi8_wol: 'NWT Reference Bible (WOL)',
-        kjv_jw: 'King James Version of 1611',
-        kjw_wol: 'King James Version of 1611 (WOL)',
-        by_jw: 'The Bible in Living English',
-        by_wol: 'The Bible in Living English (WOL)',
-        asv_jw: 'American Standard Version',
-        asv_wol: 'American Standard Version (WOL)',
-        ebr_jw: 'Emphasized Bible',
-        ebr_wol: 'Emphasized Bible (WOL)'
-      };
-      break;
-
-    default:
-      undefined;
-  }
-
-}
-
 
 function study_tools() {
   var html_content = `
@@ -610,10 +996,8 @@ function study_tools() {
   </ul>
 
   <input class="button" type="button" value="Got it!" onClick="google.script.host.close()" />
-  `
+  `;
 
-  var htmlOutput = HtmlService
-    .createHtmlOutput(html_content);
-  DocumentApp.getUi().showModalDialog(htmlOutput, 'Bible study tools');
-
+  var htmlOutput = HtmlService.createHtmlOutput(html_content);
+  DocumentApp.getUi().showModalDialog(htmlOutput, "Bible study tools");
 }
