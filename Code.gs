@@ -250,7 +250,7 @@ class BibleSearchResult {
       .getText()
       .slice(
         this.content.getStartOffset(),
-        this.content.getEndOffsetInclusive()+1
+        this.content.getEndOffsetInclusive() + 1
       );
   }
 
@@ -466,6 +466,55 @@ for (let bibleVersion of bibleVersions) {
   };
 }
 
+function existsInBibleSearchResult(
+  currentbibleSearchResult,
+  existingSearchResult
+) {
+  for (let searchResult of existingSearchResult) {
+    if (
+      currentbibleSearchResult.getSelectionStart() >=
+        searchResult.getSelectionStart() &&
+      currentbibleSearchResult.getSelectionEnd() <=
+        searchResult.getSelectionEnd()
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function getBibleSearchResult(
+  result,
+  search,
+  existingSearchResult,
+  isSingleChapter
+) {
+  let searchString = "(?i)" + search + " [0-9]+:[0-9 ,;:-]+";
+  Logger.log("searchString :" + searchString);
+  if (isSingleChapter) {
+    searchString = "(?i)" + search + " [0-9 ,-]+";
+  }
+  var searchResult = result.getSearchElement().findText(searchString);
+
+  while (searchResult != null) {
+    let currentbibleSearchResult = new BibleSearchResult(
+      searchResult,
+      result.getSelectionStart(),
+      result.getSelectionEnd()
+    );
+    if (
+      !existsInBibleSearchResult(currentbibleSearchResult, existingSearchResult)
+    ) {
+      existingSearchResult.push(currentbibleSearchResult);
+    }
+
+    searchResult = result
+      .getSearchElement()
+      .findText(searchString, searchResult);
+  }
+  return existingSearchResult;
+}
+
 function bibleLinker(bible_version) {
   // Set the latest used Bible version
   if (bible_version == undefined || bible_version == null)
@@ -505,27 +554,29 @@ function bibleLinker(bible_version) {
 
   for (let result of documentSearchResult) {
     for (let book of currentBibleVersion.getLanguage().getBooks()) {
-      let bookName = book.getName();
-      let searchString = '(?i)' + bookName + " [0-9]+:[0-9 ,;:-]+";
-      Logger.log("searchString :" + searchString);
-      if (book.isSingleChapter()) {
-        searchString = '(?i)' + bookName + " [0-9 ,-]+";
-      }
-      var bibleTextSearchResults = new Array();
-      var searchResult = result.getSearchElement().findText(searchString);
+      let bibleTextSearchResults = getBibleSearchResult(
+        result,
+        book.getName(),
+        new Array(),
+        book.isSingleChapter()
+      );
 
-      while (searchResult != null) {
-        bibleTextSearchResults.push(
-          new BibleSearchResult(
-            searchResult,
-            result.getSelectionStart(),
-            result.getSelectionEnd()
-          )
+      if (book.getAbbr1() != "") {
+        bibleTextSearchResults = getBibleSearchResult(
+          result,
+          book.getAbbr1(),
+          bibleTextSearchResults,
+          book.isSingleChapter()
         );
+      }
 
-        searchResult = result
-          .getSearchElement()
-          .findText(searchString, searchResult);
+      if (book.getAbbr2() != "") {
+        bibleTextSearchResults = getBibleSearchResult(
+          result,
+          book.getAbbr2(),
+          bibleTextSearchResults,
+          book.isSingleChapter()
+        );
       }
 
       for (let bibleTextSearch of bibleTextSearchResults) {
@@ -666,8 +717,8 @@ function parseBibleText(bibleTextStartIndex, content, bibleBook) {
             .toString()
             .replace(":", "");
         } else {
-            verse_start = bibleText[m].match(/\s[0-9]+/).toString();
-            verse_end = bibleText[m].match(/[0-9]+\s*$/).toString();
+          verse_start = bibleText[m].match(/\s[0-9]+/).toString();
+          verse_end = bibleText[m].match(/[0-9]+\s*$/).toString();
         }
         let verseLength = bibleText[m].trim().length;
         let start = bibleTextStartIndex + offset;
