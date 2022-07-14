@@ -190,6 +190,76 @@ const tagalogBibleBooks = new BibleLanguage("Tagalog", "tl", [
   new BibleBook(65, "Judas", "", "", true),
   new BibleBook(66, "Apocalipsis", "", "", false),
 ]);
+
+const spanishBibleBooks = new BibleLanguage("Spanish", "es", [
+  new BibleBook(1, "Génesis", "Gé", "", false),
+  new BibleBook(2, "Éxodo", "Éx", "", false),
+  new BibleBook(3, "Levítico", "Le", "", false),
+  new BibleBook(4, "Números", "Nú", "", false),
+  new BibleBook(5, "Deuteronomio", "Dt", "", false),
+  new BibleBook(6, "Josué", "Jos", "", false),
+  new BibleBook(7, "Jueces", "Jue", "", false),
+  new BibleBook(8, "Rut", "", "", false),
+  new BibleBook(9, "1 Samuel", "1Sa", "", false),
+  new BibleBook(10, "2 Samuel", "2Sa", "", false),
+  new BibleBook(11, "1 Reyes", "1Re", "", false),
+  new BibleBook(12, "2 Reyes", "2Re", "", false),
+  new BibleBook(13, "1 Cronica", "1Cr", "", false),
+  new BibleBook(14, "2 Cronica", "2Cr", "", false),
+  new BibleBook(15, "Esdras", "Esd", "", false),
+  new BibleBook(16, "Nehemías", "Ne", "", false),
+  new BibleBook(17, "Ester", "Est", "", false),
+  new BibleBook(18, "Job", "", "", false),
+  new BibleBook(19, "Salmos", "Sl", "", false),
+  new BibleBook(20, "Proverbios", "Pr", "", false),
+  new BibleBook(21, "Eclesiastés", "Ec", "", false),
+  new BibleBook(22, "El Cantar de los Cantares", "Can", "", false),
+  new BibleBook(23, "Isaías", "Is", "", false),
+  new BibleBook(24, "Jeremías", "Jer", "", false),
+  new BibleBook(25, "Lamentaciones", "Lam", "", false),
+  new BibleBook(26, "Ezequiel", "Eze", "", false),
+  new BibleBook(27, "Daniel", "Da", "", false),
+  new BibleBook(28, "Oseas", "Os", "", false),
+  new BibleBook(29, "Joel", "Joe", "", false),
+  new BibleBook(30, "Amós", "Am", "", false),
+  new BibleBook(31, "Abdías", "Abd", "", true),
+  new BibleBook(32, "Jonás", "Jon", "", false),
+  new BibleBook(33, "Miqueas", "Miq", "", false),
+  new BibleBook(34, "Nahúm", "Na", "", false),
+  new BibleBook(35, "Habacuc", "Hab", "", false),
+  new BibleBook(36, "Sofonías", "Sof", "", false),
+  new BibleBook(37, "Ageo", "Ag", "", false),
+  new BibleBook(38, "Zacarías", "Zac", "", false),
+  new BibleBook(39, "Malaquías", "Mal", "", false),
+  new BibleBook(40, "Mateo", "Mt", "", false),
+  new BibleBook(41, "Marcos", "Mr", "", false),
+  new BibleBook(42, "Lucas", "Lu", "", false),
+  new BibleBook(43, "Juan", "Jn", "", false),
+  new BibleBook(44, "Hechos", "Hch", "", false),
+  new BibleBook(45, "Romanos", "Ro", "", false),
+  new BibleBook(46, "1 Corintios", "1Co", "", false),
+  new BibleBook(47, "2 Corintios", "2Co", "", false),
+  new BibleBook(48, "Gálatas", "Gál", "", false),
+  new BibleBook(49, "Efesios", "Ef", "", false),
+  new BibleBook(50, "Filipenses", "Flp", "", false),
+  new BibleBook(51, "Colosenses", "Col", "", false),
+  new BibleBook(52, "1 Tesalonicenses", "1Te", "", false),
+  new BibleBook(53, "2 Tesalonicenses", "2Te", "", false),
+  new BibleBook(54, "1 Timoteo", "1Ti", "", false),
+  new BibleBook(55, "2 Timoteo", "2Ti", "", false),
+  new BibleBook(56, "Tito", "Tit", "", false),
+  new BibleBook(57, "Filemón", "Flm", "", true),
+  new BibleBook(58, "Hebreos", "Heb", "", false),
+  new BibleBook(59, "Santiago", "Snt", "", false),
+  new BibleBook(60, "1 Pedro", "1Pe", "", false),
+  new BibleBook(61, "2 Pedro", "2Pe", "", false),
+  new BibleBook(62, "1 Juan", "1Jn", "", false),
+  new BibleBook(63, "2 Juan", "2Jn", "", true),
+  new BibleBook(64, "3 Juan", "3Jn", "", true),
+  new BibleBook(65, "Judas", "Jud", "", true),
+  new BibleBook(66, "Apocalipsis", "Ap", "", false),
+]);
+
 class Bible {
   constructor(language, translation) {
     this.language = language;
@@ -403,7 +473,7 @@ function onOpen(e) {
 }
 
 function getLanguages() {
-  return [englishBibleBooks, tagalogBibleBooks];
+  return [englishBibleBooks, tagalogBibleBooks, spanishBibleBooks];
 }
 
 function create_menu() {
@@ -1016,8 +1086,28 @@ function getBibleVersions() {
       tagalogBibleBooks,
       new BibleTranslation(
         "nwt_tl",
-        "Edisyon sa Pag-aaral(NWT_TL)",
+        "Bagong Sanlibutang Salin ng Banal na Kasulatan (Edisyon sa Pag-aaral)",
         "https://www.jw.org/finder?wtlocale=TG&pub=nwtsty&bible=",
+        "",
+        ""
+      )
+    ),
+    new Bible(
+      tagalogBibleBooks,
+      new BibleTranslation(
+        "nwt_tl19",
+        "Bagong Sanlibutang Salin (2019 na Rebisyon)",
+        "https://www.jw.org/finder?wtlocale=TG&pub=nwt&bible=",
+        "",
+        ""
+      )
+    ),
+    new Bible(
+      spanishBibleBooks,
+      new BibleTranslation(
+        "nwt_es",
+        "La Biblia. Traducción del Nuevo Mundo (edición de estudio)",
+        "https://www.jw.org/finder?wtlocale=ES&pub=nwtsty&bible=",
         "",
         ""
       )
@@ -1027,49 +1117,49 @@ function getBibleVersions() {
 
 function study_tools() {
   var html_content = `
-    <style>
-      html {font-family: "Open Sans", Arial, sans-serif;}
-  
-      li {padding: 0 0 20px 0;}
-  
-      .button {
-        background-color: #326B8C;
-        border: 2px solid #326B8C;
-        border-radius: 8px;
-        font-weight: bold;
-        color: #FFF;
-        text-align: center;
-        text-decoration: none;
-        font-size: 16px;
-        margin: 30px auto 10px auto;
-        padding: 12px 24px;
-        display:block;
-        transition-duration: 0.4s;
-        cursor: pointer;
-      }
-  
-      .button:hover {
-        box-shadow: 0 6px 16px 0 rgba(0,0,0,0.24), 0 9px 50px 0 rgba(0,0,0,0.19);
-      }
-  
-      .button:active {
-        box-shadow: 0 2px 50px 0 rgba(0,0,0,0.24), 0 5px 10px 0 rgba(0,0,0,0.19);
-        transform: translateY(4px);
-      }
-    </style>
+      <style>
+        html {font-family: "Open Sans", Arial, sans-serif;}
     
-    <base target="_blank">
-  
-    <p>Tools to help you get a deeper understanding of the Bible:</p>
-  
-    <ul>
-      <li><strong><a href="https://wol.jw.org/">Watchtower Online Library</a> (WOL)</strong> - A research tool to find explanatory articles about Bible verses and topics.</li>
-      <li><strong><a href="https://www.jw.org/finder?docid=802013025">JW Library</a></strong> - Bible library in your pocket.</li>
-      <li><strong><a href="https://www.jw.org/finder?docid=1011539">Study tools</a></strong> on <a href="https://www.jw.org/">jw.org</a>.</li>
-    </ul>
-  
-    <input class="button" type="button" value="Got it!" onClick="google.script.host.close()" />
-    `;
+        li {padding: 0 0 20px 0;}
+    
+        .button {
+          background-color: #326B8C;
+          border: 2px solid #326B8C;
+          border-radius: 8px;
+          font-weight: bold;
+          color: #FFF;
+          text-align: center;
+          text-decoration: none;
+          font-size: 16px;
+          margin: 30px auto 10px auto;
+          padding: 12px 24px;
+          display:block;
+          transition-duration: 0.4s;
+          cursor: pointer;
+        }
+    
+        .button:hover {
+          box-shadow: 0 6px 16px 0 rgba(0,0,0,0.24), 0 9px 50px 0 rgba(0,0,0,0.19);
+        }
+    
+        .button:active {
+          box-shadow: 0 2px 50px 0 rgba(0,0,0,0.24), 0 5px 10px 0 rgba(0,0,0,0.19);
+          transform: translateY(4px);
+        }
+      </style>
+      
+      <base target="_blank">
+    
+      <p>Tools to help you get a deeper understanding of the Bible:</p>
+    
+      <ul>
+        <li><strong><a href="https://wol.jw.org/">Watchtower Online Library</a> (WOL)</strong> - A research tool to find explanatory articles about Bible verses and topics.</li>
+        <li><strong><a href="https://www.jw.org/finder?docid=802013025">JW Library</a></strong> - Bible library in your pocket.</li>
+        <li><strong><a href="https://www.jw.org/finder?docid=1011539">Study tools</a></strong> on <a href="https://www.jw.org/">jw.org</a>.</li>
+      </ul>
+    
+      <input class="button" type="button" value="Got it!" onClick="google.script.host.close()" />
+      `;
 
   var htmlOutput = HtmlService.createHtmlOutput(html_content);
   DocumentApp.getUi().showModalDialog(htmlOutput, "Bible study tools");
