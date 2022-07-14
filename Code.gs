@@ -317,6 +317,7 @@ function getBibleLink(bibleText, bibleTranslation) {
         bibleText.getBibleBook().getIndex() +
         ":" +
         bibleText.getChapterEnd() +
+        ":" +
         bibleText.getVerseEnd()
       );
     }
