@@ -551,6 +551,7 @@ function bibleLinker(bible_version) {
   } else {
     documentSearchResult.push(new SearchElement(doc.getBody()));
   }
+  var erroneousLines = new Array();
   var err_msg_title = "Oops!";
   var err_msg1 = "There was an error processing this verse:\n\n";
   var err_msg2 = "\n\nIs there a typo? (Tip: It's usually the spaces.)";
@@ -583,59 +584,60 @@ function bibleLinker(bible_version) {
       }
 
       for (let bibleTextSearch of bibleTextSearchResults) {
-        try {
-          for (let bibleTextParseResult of parseBibleText(
-            bibleTextSearch.getContent().getStartOffset(),
-            bibleTextSearch.getBibleText(),
-            book
-          )) {
-            let selectionStart = bibleTextSearch.getSelectionStart();
-            let selectionEnd = bibleTextSearch.getSelectionEnd();
-            let bibleTextOffsetStart = bibleTextParseResult.getOffsetStart();
-            let bibleTextOffsetEnd = bibleTextParseResult.getOffsetEnd();
-            Logger.log(
-              "selectionStart: " +
-                selectionStart +
-                ", selectionEnd: " +
-                selectionEnd +
-                ", bibleTextOffsetStart: " +
-                bibleTextOffsetStart +
-                ", bibleTextOffsetEnd: " +
-                bibleTextOffsetEnd +
-                ", Bible Text: " +
-                bibleTextSearch.getBibleText()
-            );
-            if (
-              shouldShowLink(
-                selectionStart,
-                selectionEnd,
-                bibleTextOffsetStart,
-                bibleTextOffsetEnd
-              )
-            ) {
-              bibleTextSearch
-                .getContent()
-                .getElement()
-                .setLinkUrl(
-                  bibleTextOffsetStart,
-                  bibleTextOffsetEnd,
-                  getBibleLink(
-                    bibleTextParseResult,
-                    currentBibleVersion.getTranslation()
-                  )
-                );
-            }
-          }
-        } catch {
-          var ui = DocumentApp.getUi();
-          ui.alert(
-            err_msg_title,
-            err_msg1 + bibleTextSearch.getBibleText() + err_msg2,
-            ui.ButtonSet.OK
+        for (let bibleTextParseResult of parseBibleText(
+          bibleTextSearch.getContent().getStartOffset(),
+          bibleTextSearch.getBibleText(),
+          book,
+          erroneousLines
+        )) {
+          let selectionStart = bibleTextSearch.getSelectionStart();
+          let selectionEnd = bibleTextSearch.getSelectionEnd();
+          let bibleTextOffsetStart = bibleTextParseResult.getOffsetStart();
+          let bibleTextOffsetEnd = bibleTextParseResult.getOffsetEnd();
+          Logger.log(
+            "selectionStart: " +
+              selectionStart +
+              ", selectionEnd: " +
+              selectionEnd +
+              ", bibleTextOffsetStart: " +
+              bibleTextOffsetStart +
+              ", bibleTextOffsetEnd: " +
+              bibleTextOffsetEnd +
+              ", Bible Text: " +
+              bibleTextSearch.getBibleText()
           );
+          if (
+            shouldShowLink(
+              selectionStart,
+              selectionEnd,
+              bibleTextOffsetStart,
+              bibleTextOffsetEnd
+            )
+          ) {
+            bibleTextSearch
+              .getContent()
+              .getElement()
+              .setLinkUrl(
+                bibleTextOffsetStart,
+                bibleTextOffsetEnd,
+                getBibleLink(
+                  bibleTextParseResult,
+                  currentBibleVersion.getTranslation()
+                )
+              );
+          }
         }
       }
     }
+  }
+
+  if (erroneousLines && erroneousLines.length > 0) {
+    var ui = DocumentApp.getUi();
+    ui.alert(
+      err_msg_title,
+      err_msg1 + erroneousLines.join("\n") + err_msg2,
+      ui.ButtonSet.OK
+    );
   }
 }
 
@@ -655,7 +657,12 @@ function shouldShowLink(selectionStart, selectionEnd, offsetStart, offsetEnd) {
   return false;
 }
 
-function parseBibleText(bibleTextStartIndex, content, bibleBook) {
+function parseBibleText(
+  bibleTextStartIndex,
+  content,
+  bibleBook,
+  erroneousLines
+) {
   let bibleTextParseResults = new Array();
   var bibleTexts = content.split(";");
   let isSingleChapter = bibleBook.isSingleChapter();
@@ -695,20 +702,90 @@ function parseBibleText(bibleTextStartIndex, content, bibleBook) {
     }
   }
 
-  for (let bibleText of bibleTexts) {
-    // Declare variable(s)
-    let chapters = [],
-      verse_start,
-      verse_end;
+  try {
+    for (let bibleText of bibleTexts) {
+      // Declare variable(s)
+      let chapters = [],
+        verse_start,
+        verse_end;
 
-    if (Array.isArray(bibleText)) {
-      for (let m = 0; m < bibleText.length; m++) {
+      if (Array.isArray(bibleText)) {
+        for (let m = 0; m < bibleText.length; m++) {
+          // Get chapter(s)
+          if (isSingleChapter) {
+            chapters[0] = 1;
+            chapters[1] = 1;
+          } else {
+            chapters = bibleText[0].match(/[0-9]+:/g);
+            if (chapters.length == 1) {
+              chapters[0] = chapters[0].replace(":", "");
+              chapters[1] = chapters[0];
+            } else {
+              chapters[0] = chapters[0].replace(":", "");
+              chapters[1] = chapters[1].replace(":", "");
+            }
+          }
+
+          // Get verse(s)
+          if (bibleText[m].includes(":")) {
+            verse_start = bibleText[m]
+              .match(/:[0-9]+/)
+              .toString()
+              .replace(":", "");
+            verse_end = bibleText[m]
+              .match(/[0-9]+\s*$/)
+              .toString()
+              .replace(":", "");
+          } else {
+            verse_start = bibleText[m].match(/\s[0-9]+/).toString();
+            verse_end = bibleText[m].match(/[0-9]+\s*$/).toString();
+          }
+          let verseLength = bibleText[m].trim().length;
+          let start = bibleTextStartIndex + offset;
+          let end = start + verseLength - 1;
+          Logger.log(
+            "Chapter Start: " +
+              chapters[0] +
+              ", Chapter End: " +
+              chapters[1] +
+              ", Verse Start: " +
+              verse_start +
+              ", Verse End: " +
+              verse_end
+          );
+          Logger.log(
+            "BibleText Start Index: " +
+              bibleTextStartIndex +
+              ", Bible Text:" +
+              bibleText[m] +
+              ", Start: " +
+              start +
+              ", End: " +
+              end +
+              ", Parse Bible Text: " +
+              content.slice(start, end + 1)
+          );
+
+          offset += verseLength + 2;
+          bibleTextParseResults.push(
+            new BibleTextParseResult(
+              bibleBook,
+              chapters[0],
+              chapters[1],
+              verse_start,
+              verse_end,
+              start,
+              end
+            )
+          );
+        }
+      } else {
         // Get chapter(s)
         if (isSingleChapter) {
           chapters[0] = 1;
           chapters[1] = 1;
         } else {
-          chapters = bibleText[0].match(/[0-9]+:/g);
+          chapters = bibleText.match(/[0-9]+:/g);
           if (chapters.length == 1) {
             chapters[0] = chapters[0].replace(":", "");
             chapters[1] = chapters[0];
@@ -719,20 +796,20 @@ function parseBibleText(bibleTextStartIndex, content, bibleBook) {
         }
 
         // Get verse(s)
-        if (bibleText[m].includes(":")) {
-          verse_start = bibleText[m]
+        if (isSingleChapter) {
+          verse_start = bibleText.match(/\s[0-9]+/).toString();
+          verse_end = bibleText.match(/[0-9]+\s*$/).toString();
+        } else {
+          verse_start = bibleText
             .match(/:[0-9]+/)
             .toString()
             .replace(":", "");
-          verse_end = bibleText[m]
+          verse_end = bibleText
             .match(/[0-9]+\s*$/)
             .toString()
             .replace(":", "");
-        } else {
-          verse_start = bibleText[m].match(/\s[0-9]+/).toString();
-          verse_end = bibleText[m].match(/[0-9]+\s*$/).toString();
         }
-        let verseLength = bibleText[m].trim().length;
+        let verseLength = bibleText.trim().length;
         let start = bibleTextStartIndex + offset;
         let end = start + verseLength - 1;
         Logger.log(
@@ -745,11 +822,12 @@ function parseBibleText(bibleTextStartIndex, content, bibleBook) {
             ", Verse End: " +
             verse_end
         );
+
         Logger.log(
           "BibleText Start Index: " +
             bibleTextStartIndex +
             ", Bible Text:" +
-            bibleText[m] +
+            bibleText +
             ", Start: " +
             start +
             ", End: " +
@@ -757,7 +835,6 @@ function parseBibleText(bibleTextStartIndex, content, bibleBook) {
             ", Parse Bible Text: " +
             content.slice(start, end + 1)
         );
-
         offset += verseLength + 2;
         bibleTextParseResults.push(
           new BibleTextParseResult(
@@ -771,77 +848,10 @@ function parseBibleText(bibleTextStartIndex, content, bibleBook) {
           )
         );
       }
-    } else {
-      // Get chapter(s)
-      if (isSingleChapter) {
-        chapters[0] = 1;
-        chapters[1] = 1;
-      } else {
-        chapters = bibleText.match(/[0-9]+:/g);
-        if (chapters.length == 1) {
-          chapters[0] = chapters[0].replace(":", "");
-          chapters[1] = chapters[0];
-        } else {
-          chapters[0] = chapters[0].replace(":", "");
-          chapters[1] = chapters[1].replace(":", "");
-        }
-      }
-
-      // Get verse(s)
-      if (isSingleChapter) {
-        verse_start = bibleText.match(/\s[0-9]+/).toString();
-        verse_end = bibleText.match(/[0-9]+\s*$/).toString();
-      } else {
-        verse_start = bibleText
-          .match(/:[0-9]+/)
-          .toString()
-          .replace(":", "");
-        verse_end = bibleText
-          .match(/[0-9]+\s*$/)
-          .toString()
-          .replace(":", "");
-      }
-      let verseLength = bibleText.trim().length;
-      let start = bibleTextStartIndex + offset;
-      let end = start + verseLength - 1;
-      Logger.log(
-        "Chapter Start: " +
-          chapters[0] +
-          ", Chapter End: " +
-          chapters[1] +
-          ", Verse Start: " +
-          verse_start +
-          ", Verse End: " +
-          verse_end
-      );
-
-      Logger.log(
-        "BibleText Start Index: " +
-          bibleTextStartIndex +
-          ", Bible Text:" +
-          bibleText +
-          ", Start: " +
-          start +
-          ", End: " +
-          end +
-          ", Parse Bible Text: " +
-          content.slice(start, end + 1)
-      );
-      offset += verseLength + 2;
-      bibleTextParseResults.push(
-        new BibleTextParseResult(
-          bibleBook,
-          chapters[0],
-          chapters[1],
-          verse_start,
-          verse_end,
-          start,
-          end
-        )
-      );
     }
+  } catch {
+    erroneousLines.push(content);
   }
-
   return bibleTextParseResults;
 }
 
