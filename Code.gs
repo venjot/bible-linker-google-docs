@@ -965,16 +965,6 @@ function getBibleVersions() {
     new Bible(
       englishBibleBooks,
       new BibleTranslation(
-        "wol_nwt",
-        "New World Translation (NWT) (WOL)",
-        "https://wol.jw.org/en/wol/b/r1/lp-e/nwt/",
-        "#s=",
-        "&study=discover&v="
-      )
-    ),
-    new Bible(
-      englishBibleBooks,
-      new BibleTranslation(
         "nwtsty_wol",
         "NWT Study Bible (WOL)",
         "https://wol.jw.org/en/wol/b/r1/lp-e/nwtsty/",
