@@ -542,19 +542,43 @@ for (let bibleVersion of bibleVersions) {
 }
 
 function existsInBibleSearchResult(
-  currentbibleSearchResult,
-  existingSearchResult
+  bibleText,
+  currentBibleTextSearchResult,
+  existingBibleTextSearchResult
 ) {
-  for (let searchResult of existingSearchResult) {
+  for (let searchResult of existingBibleTextSearchResult) {
+    Logger.log(
+      "currentBibleTextSearchResult.getSelectionStart(): " +
+        currentBibleTextSearchResult.getOffsetStart()
+    );
+    Logger.log(
+      "searchResult.getSelectionStart(): " + searchResult.getOffsetStart()
+    );
+    Logger.log(
+      "currentBibleTextSearchResult.getSelectionEnd(): " +
+        currentBibleTextSearchResult.getOffsetEnd()
+    );
+    Logger.log(
+      "searchResult.getSelectionEnd(): " + searchResult.getOffsetEnd()
+    );
     if (
-      currentbibleSearchResult.getSelectionStart() >=
-        searchResult.getSelectionStart() &&
-      currentbibleSearchResult.getSelectionEnd() <=
-        searchResult.getSelectionEnd()
+      currentBibleTextSearchResult.getOffsetStart() >=
+        searchResult.getOffsetStart() &&
+      currentBibleTextSearchResult.getOffsetEnd() <= searchResult.getOffsetEnd()
     ) {
+      Logger.log(
+        "Bible Text: " +
+          bibleText +
+          " is partial of recent bible search text result."
+      );
       return true;
     }
   }
+  Logger.log(
+    "Bible Text: " +
+      bibleText +
+      " is not partial of recent bible search text result."
+  );
   return false;
 }
 
@@ -577,11 +601,7 @@ function getBibleSearchResult(
       result.getSelectionStart(),
       result.getSelectionEnd()
     );
-    if (
-      !existsInBibleSearchResult(currentbibleSearchResult, existingSearchResult)
-    ) {
-      existingSearchResult.push(currentbibleSearchResult);
-    }
+    existingSearchResult.push(currentbibleSearchResult);
 
     searchResult = result
       .getSearchElement()
@@ -630,7 +650,7 @@ function bibleLinker(bible_version) {
   var err_msg_title = "Oops!";
   var err_msg1 = "There was an error processing this verse:\n\n";
   var err_msg2 = "\n\nIs there a typo? (Tip: It's usually the spaces.)";
-
+  let allExistingBibleTextSearchresult = new Array();
   for (let result of documentSearchResult) {
     for (let book of currentBibleVersion.getLanguage().getBooks()) {
       let bibleTextSearchResults = getBibleSearchResult(
@@ -689,17 +709,31 @@ function bibleLinker(bible_version) {
               bibleTextOffsetEnd
             )
           ) {
-            bibleTextSearch
-              .getContent()
-              .getElement()
-              .setLinkUrl(
-                bibleTextOffsetStart,
-                bibleTextOffsetEnd,
-                getBibleLink(
-                  bibleTextParseResult,
-                  currentBibleVersion.getTranslation()
-                )
-              );
+            Logger.log(
+              "Checking if " +
+                bibleTextSearch.getBibleText() +
+                " is partial of a bible text."
+            );
+            if (
+              !existsInBibleSearchResult(
+                bibleTextSearch.getBibleText(),
+                bibleTextParseResult,
+                allExistingBibleTextSearchresult
+              )
+            ) {
+              allExistingBibleTextSearchresult.push(bibleTextParseResult);
+              bibleTextSearch
+                .getContent()
+                .getElement()
+                .setLinkUrl(
+                  bibleTextOffsetStart,
+                  bibleTextOffsetEnd,
+                  getBibleLink(
+                    bibleTextParseResult,
+                    currentBibleVersion.getTranslation()
+                  )
+                );
+            }
           }
         }
       }
@@ -1095,9 +1129,9 @@ function getBibleVersions() {
     new Bible(
       spanishBibleBooks,
       new BibleTranslation(
-        "nwt_es",
+        "nwt_s",
         "La Biblia. Traducción del Nuevo Mundo (edición de estudio)",
-        "https://www.jw.org/finder?wtlocale=ES&pub=nwtsty&bible=",
+        "https://www.jw.org/finder?wtlocale=S&pub=nwtsty&bible=",
         "",
         ""
       )
@@ -1107,49 +1141,49 @@ function getBibleVersions() {
 
 function study_tools() {
   var html_content = `
-      <style>
-        html {font-family: "Open Sans", Arial, sans-serif;}
-    
-        li {padding: 0 0 20px 0;}
-    
-        .button {
-          background-color: #326B8C;
-          border: 2px solid #326B8C;
-          border-radius: 8px;
-          font-weight: bold;
-          color: #FFF;
-          text-align: center;
-          text-decoration: none;
-          font-size: 16px;
-          margin: 30px auto 10px auto;
-          padding: 12px 24px;
-          display:block;
-          transition-duration: 0.4s;
-          cursor: pointer;
-        }
-    
-        .button:hover {
-          box-shadow: 0 6px 16px 0 rgba(0,0,0,0.24), 0 9px 50px 0 rgba(0,0,0,0.19);
-        }
-    
-        .button:active {
-          box-shadow: 0 2px 50px 0 rgba(0,0,0,0.24), 0 5px 10px 0 rgba(0,0,0,0.19);
-          transform: translateY(4px);
-        }
-      </style>
+        <style>
+          html {font-family: "Open Sans", Arial, sans-serif;}
       
-      <base target="_blank">
-    
-      <p>Tools to help you get a deeper understanding of the Bible:</p>
-    
-      <ul>
-        <li><strong><a href="https://wol.jw.org/">Watchtower Online Library</a> (WOL)</strong> - A research tool to find explanatory articles about Bible verses and topics.</li>
-        <li><strong><a href="https://www.jw.org/finder?docid=802013025">JW Library</a></strong> - Bible library in your pocket.</li>
-        <li><strong><a href="https://www.jw.org/finder?docid=1011539">Study tools</a></strong> on <a href="https://www.jw.org/">jw.org</a>.</li>
-      </ul>
-    
-      <input class="button" type="button" value="Got it!" onClick="google.script.host.close()" />
-      `;
+          li {padding: 0 0 20px 0;}
+      
+          .button {
+            background-color: #326B8C;
+            border: 2px solid #326B8C;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #FFF;
+            text-align: center;
+            text-decoration: none;
+            font-size: 16px;
+            margin: 30px auto 10px auto;
+            padding: 12px 24px;
+            display:block;
+            transition-duration: 0.4s;
+            cursor: pointer;
+          }
+      
+          .button:hover {
+            box-shadow: 0 6px 16px 0 rgba(0,0,0,0.24), 0 9px 50px 0 rgba(0,0,0,0.19);
+          }
+      
+          .button:active {
+            box-shadow: 0 2px 50px 0 rgba(0,0,0,0.24), 0 5px 10px 0 rgba(0,0,0,0.19);
+            transform: translateY(4px);
+          }
+        </style>
+        
+        <base target="_blank">
+      
+        <p>Tools to help you get a deeper understanding of the Bible:</p>
+      
+        <ul>
+          <li><strong><a href="https://wol.jw.org/">Watchtower Online Library</a> (WOL)</strong> - A research tool to find explanatory articles about Bible verses and topics.</li>
+          <li><strong><a href="https://www.jw.org/finder?docid=802013025">JW Library</a></strong> - Bible library in your pocket.</li>
+          <li><strong><a href="https://www.jw.org/finder?docid=1011539">Study tools</a></strong> on <a href="https://www.jw.org/">jw.org</a>.</li>
+        </ul>
+      
+        <input class="button" type="button" value="Got it!" onClick="google.script.host.close()" />
+        `;
 
   var htmlOutput = HtmlService.createHtmlOutput(html_content);
   DocumentApp.getUi().showModalDialog(htmlOutput, "Bible study tools");
