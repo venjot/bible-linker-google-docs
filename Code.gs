@@ -541,58 +541,13 @@ for (let bibleVersion of bibleVersions) {
   };
 }
 
-function existsInBibleSearchResult(
-  bibleText,
-  currentBibleTextSearchResult,
-  existingBibleTextSearchResult
-) {
-  for (let searchResult of existingBibleTextSearchResult) {
-    Logger.log(
-      "currentBibleTextSearchResult.getSelectionStart(): " +
-        currentBibleTextSearchResult.getOffsetStart()
-    );
-    Logger.log(
-      "searchResult.getSelectionStart(): " + searchResult.getOffsetStart()
-    );
-    Logger.log(
-      "currentBibleTextSearchResult.getSelectionEnd(): " +
-        currentBibleTextSearchResult.getOffsetEnd()
-    );
-    Logger.log(
-      "searchResult.getSelectionEnd(): " + searchResult.getOffsetEnd()
-    );
-    if (
-      currentBibleTextSearchResult.getOffsetStart() >=
-        searchResult.getOffsetStart() &&
-      currentBibleTextSearchResult.getOffsetEnd() <= searchResult.getOffsetEnd()
-    ) {
-      Logger.log(
-        "Bible Text: " +
-          bibleText +
-          " is partial of recent bible search text result."
-      );
-      return true;
-    }
-  }
-  Logger.log(
-    "Bible Text: " +
-      bibleText +
-      " is not partial of recent bible search text result."
-  );
-  return false;
-}
-
-function getBibleSearchResult(
-  result,
-  search,
-  existingSearchResult,
-  isSingleChapter
-) {
+function getBibleSearchResult(result, search, isSingleChapter) {
   let searchString = "(?i)" + search + " [0-9]+:[0-9 ,;:-]+";
   Logger.log("searchString :" + searchString);
   if (isSingleChapter) {
     searchString = "(?i)" + search + " [0-9 ,-]+";
   }
+  let bibleSearchResult = new Array();
   var searchResult = result.getSearchElement().findText(searchString);
 
   while (searchResult != null) {
@@ -601,15 +556,74 @@ function getBibleSearchResult(
       result.getSelectionStart(),
       result.getSelectionEnd()
     );
-    existingSearchResult.push(currentbibleSearchResult);
+    bibleSearchResult.push(currentbibleSearchResult);
 
     searchResult = result
       .getSearchElement()
       .findText(searchString, searchResult);
   }
-  return existingSearchResult;
+  return bibleSearchResult;
 }
 
+function searchBible(
+  searchBibleText,
+  result,
+  book,
+  erroneousLines,
+  currentBibleVersion
+) {
+  let bibleTextSearchResults = getBibleSearchResult(
+    result,
+    searchBibleText,
+    book.isSingleChapter()
+  );
+
+  for (let bibleTextSearch of bibleTextSearchResults) {
+    for (let bibleTextParseResult of parseBibleText(
+      bibleTextSearch.getContent().getStartOffset(),
+      bibleTextSearch.getBibleText(),
+      book,
+      erroneousLines
+    )) {
+      let selectionStart = bibleTextSearch.getSelectionStart();
+      let selectionEnd = bibleTextSearch.getSelectionEnd();
+      let bibleTextOffsetStart = bibleTextParseResult.getOffsetStart();
+      let bibleTextOffsetEnd = bibleTextParseResult.getOffsetEnd();
+      Logger.log(
+        "selectionStart: " +
+          selectionStart +
+          ", selectionEnd: " +
+          selectionEnd +
+          ", bibleTextOffsetStart: " +
+          bibleTextOffsetStart +
+          ", bibleTextOffsetEnd: " +
+          bibleTextOffsetEnd +
+          ", Bible Text: " +
+          bibleTextSearch.getBibleText()
+      );
+      if (
+        shouldShowLink(
+          selectionStart,
+          selectionEnd,
+          bibleTextOffsetStart,
+          bibleTextOffsetEnd
+        )
+      ) {
+        bibleTextSearch
+          .getContent()
+          .getElement()
+          .setLinkUrl(
+            bibleTextOffsetStart,
+            bibleTextOffsetEnd,
+            getBibleLink(
+              bibleTextParseResult,
+              currentBibleVersion.getTranslation()
+            )
+          );
+      }
+    }
+  }
+}
 function bibleLinker(bible_version) {
   // Set the latest used Bible version
   if (bible_version == undefined || bible_version == null)
@@ -652,76 +666,35 @@ function bibleLinker(bible_version) {
   var err_msg2 = "\n\nIs there a typo? (Tip: It's usually the spaces.)";
   for (let result of documentSearchResult) {
     for (let book of currentBibleVersion.getLanguage().getBooks()) {
-      let bibleTextSearchResults = getBibleSearchResult(
-        result,
-        book.getName(),
-        new Array(),
-        book.isSingleChapter()
-      );
-
       if (book.getAbbr1() != "") {
-        bibleTextSearchResults = getBibleSearchResult(
-          result,
+        searchBible(
           book.getAbbr1(),
-          bibleTextSearchResults,
-          book.isSingleChapter()
-        );
-      }
-
-      if (book.getAbbr2() != "") {
-        bibleTextSearchResults = getBibleSearchResult(
           result,
-          book.getAbbr2(),
-          bibleTextSearchResults,
-          book.isSingleChapter()
+          book,
+          erroneousLines,
+          currentBibleVersion
         );
       }
-
-      for (let bibleTextSearch of bibleTextSearchResults) {
-        for (let bibleTextParseResult of parseBibleText(
-          bibleTextSearch.getContent().getStartOffset(),
-          bibleTextSearch.getBibleText(),
+    }
+    for (let book of currentBibleVersion.getLanguage().getBooks()) {
+      if (book.getAbbr2() != "") {
+        searchBible(
+          book.getAbbr2(),
+          result,
           book,
-          erroneousLines
-        )) {
-          let selectionStart = bibleTextSearch.getSelectionStart();
-          let selectionEnd = bibleTextSearch.getSelectionEnd();
-          let bibleTextOffsetStart = bibleTextParseResult.getOffsetStart();
-          let bibleTextOffsetEnd = bibleTextParseResult.getOffsetEnd();
-          Logger.log(
-            "selectionStart: " +
-              selectionStart +
-              ", selectionEnd: " +
-              selectionEnd +
-              ", bibleTextOffsetStart: " +
-              bibleTextOffsetStart +
-              ", bibleTextOffsetEnd: " +
-              bibleTextOffsetEnd +
-              ", Bible Text: " +
-              bibleTextSearch.getBibleText()
-          );
-          if (
-            shouldShowLink(
-              selectionStart,
-              selectionEnd,
-              bibleTextOffsetStart,
-              bibleTextOffsetEnd
-            )
-          ) {
-            bibleTextSearch
-              .getContent()
-              .getElement()
-              .setLinkUrl(
-                bibleTextOffsetStart,
-                bibleTextOffsetEnd,
-                getBibleLink(
-                  bibleTextParseResult,
-                  currentBibleVersion.getTranslation()
-                )
-              );
-          }
-        }
+          erroneousLines,
+          currentBibleVersion
+        );
       }
+    }
+    for (let book of currentBibleVersion.getLanguage().getBooks()) {
+      searchBible(
+        book.getName(),
+        result,
+        book,
+        erroneousLines,
+        currentBibleVersion
+      );
     }
   }
 
@@ -1126,49 +1099,49 @@ function getBibleVersions() {
 
 function study_tools() {
   var html_content = `
-          <style>
-            html {font-family: "Open Sans", Arial, sans-serif;}
-        
-            li {padding: 0 0 20px 0;}
-        
-            .button {
-              background-color: #326B8C;
-              border: 2px solid #326B8C;
-              border-radius: 8px;
-              font-weight: bold;
-              color: #FFF;
-              text-align: center;
-              text-decoration: none;
-              font-size: 16px;
-              margin: 30px auto 10px auto;
-              padding: 12px 24px;
-              display:block;
-              transition-duration: 0.4s;
-              cursor: pointer;
-            }
-        
-            .button:hover {
-              box-shadow: 0 6px 16px 0 rgba(0,0,0,0.24), 0 9px 50px 0 rgba(0,0,0,0.19);
-            }
-        
-            .button:active {
-              box-shadow: 0 2px 50px 0 rgba(0,0,0,0.24), 0 5px 10px 0 rgba(0,0,0,0.19);
-              transform: translateY(4px);
-            }
-          </style>
+            <style>
+              html {font-family: "Open Sans", Arial, sans-serif;}
           
-          <base target="_blank">
-        
-          <p>Tools to help you get a deeper understanding of the Bible:</p>
-        
-          <ul>
-            <li><strong><a href="https://wol.jw.org/">Watchtower Online Library</a> (WOL)</strong> - A research tool to find explanatory articles about Bible verses and topics.</li>
-            <li><strong><a href="https://www.jw.org/finder?docid=802013025">JW Library</a></strong> - Bible library in your pocket.</li>
-            <li><strong><a href="https://www.jw.org/finder?docid=1011539">Study tools</a></strong> on <a href="https://www.jw.org/">jw.org</a>.</li>
-          </ul>
-        
-          <input class="button" type="button" value="Got it!" onClick="google.script.host.close()" />
-          `;
+              li {padding: 0 0 20px 0;}
+          
+              .button {
+                background-color: #326B8C;
+                border: 2px solid #326B8C;
+                border-radius: 8px;
+                font-weight: bold;
+                color: #FFF;
+                text-align: center;
+                text-decoration: none;
+                font-size: 16px;
+                margin: 30px auto 10px auto;
+                padding: 12px 24px;
+                display:block;
+                transition-duration: 0.4s;
+                cursor: pointer;
+              }
+          
+              .button:hover {
+                box-shadow: 0 6px 16px 0 rgba(0,0,0,0.24), 0 9px 50px 0 rgba(0,0,0,0.19);
+              }
+          
+              .button:active {
+                box-shadow: 0 2px 50px 0 rgba(0,0,0,0.24), 0 5px 10px 0 rgba(0,0,0,0.19);
+                transform: translateY(4px);
+              }
+            </style>
+            
+            <base target="_blank">
+          
+            <p>Tools to help you get a deeper understanding of the Bible:</p>
+          
+            <ul>
+              <li><strong><a href="https://wol.jw.org/">Watchtower Online Library</a> (WOL)</strong> - A research tool to find explanatory articles about Bible verses and topics.</li>
+              <li><strong><a href="https://www.jw.org/finder?docid=802013025">JW Library</a></strong> - Bible library in your pocket.</li>
+              <li><strong><a href="https://www.jw.org/finder?docid=1011539">Study tools</a></strong> on <a href="https://www.jw.org/">jw.org</a>.</li>
+            </ul>
+          
+            <input class="button" type="button" value="Got it!" onClick="google.script.host.close()" />
+            `;
 
   var htmlOutput = HtmlService.createHtmlOutput(html_content);
   DocumentApp.getUi().showModalDialog(htmlOutput, "Bible study tools");
