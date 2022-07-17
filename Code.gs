@@ -214,7 +214,7 @@ const spanishBibleBooks = new BibleLanguage("Spanish", "es", [
   new BibleBook(20, "Proverbios", "Pr", "", false),
   new BibleBook(21, "Eclesiastés", "Ec", "", false),
   new BibleBook(22, "El Cantar de los Cantares", "Can", "", false),
-  new BibleBook(23, "Isaías", "Is", "", false),
+  new BibleBook(23, "Isaías", "Is", "Isa", false),
   new BibleBook(24, "Jeremías", "Jer", "", false),
   new BibleBook(25, "Lamentaciones", "Lam", "", false),
   new BibleBook(26, "Ezequiel", "Eze", "", false),
@@ -257,7 +257,7 @@ const spanishBibleBooks = new BibleLanguage("Spanish", "es", [
   new BibleBook(63, "2 Juan", "2Jn", "", true),
   new BibleBook(64, "3 Juan", "3Jn", "", true),
   new BibleBook(65, "Judas", "Jud", "", true),
-  new BibleBook(66, "Apocalipsis", "Ap", "", false),
+  new BibleBook(66, "Apocalipsis", "Ap", "Rev", false),
 ]);
 
 class Bible {
