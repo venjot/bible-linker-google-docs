@@ -124,19 +124,19 @@ const englishBibleBooks = new BibleLanguage("English", "en", [
 
 const tagalogBibleBooks = new BibleLanguage("Tagalog", "tl", [
   new BibleBook(1, "Genesis", "Gen", "", false),
-  new BibleBook(2, "Exodus", "Ex", "", false),
+  new BibleBook(2, "Exodo", "Ex", "Exo", false),
   new BibleBook(3, "Levitico", "Lev", "", false),
   new BibleBook(4, "Bilang", "Bil", "", false),
   new BibleBook(5, "Deutoronomio", "Deut", "Deu", false),
   new BibleBook(6, "Josue", "Jos", "", false),
   new BibleBook(7, "Hukom", "Huk", "", false),
   new BibleBook(8, "Ruth", "Ru", "", false),
-  new BibleBook(9, "1 Samuel", "1 Sam", "", false),
-  new BibleBook(10, "2 Samuel", "2 Sam", "", false),
-  new BibleBook(11, "1 Hari", "1 Ha", "", false),
-  new BibleBook(12, "2 Hari", "2 Ha", "", false),
-  new BibleBook(13, "1 Cronica", "1 Cro", "", false),
-  new BibleBook(14, "2 Cronica", "2 Cro", "", false),
+  new BibleBook(9, "1 Samuel", "1 Sam", "1Sa", false),
+  new BibleBook(10, "2 Samuel", "2 Sam", "2Sa", false),
+  new BibleBook(11, "1 Hari", "1 Ha", "1Ha", false),
+  new BibleBook(12, "2 Hari", "2 Ha", "2Ha", false),
+  new BibleBook(13, "1 Cronica", "1 Cro", "1Cr", false),
+  new BibleBook(14, "2 Cronica", "2 Cro", "2Cr", false),
   new BibleBook(15, "Ezra", "Ezr", "", false),
   new BibleBook(16, "Nehemias", "Neh", "Ne", false),
   new BibleBook(17, "Esther", "Es", "", false),
@@ -148,7 +148,7 @@ const tagalogBibleBooks = new BibleLanguage("Tagalog", "tl", [
   new BibleBook(23, "Isaias", "Isa", "", false),
   new BibleBook(24, "Jeremias", "Jer", "", false),
   new BibleBook(25, "Panaghoy", "Panag", "Pan", false),
-  new BibleBook(26, "Ezekiel", "Ezek", "Eza", false),
+  new BibleBook(26, "Ezekiel", "Ezek", "Eze", false),
   new BibleBook(27, "Daniel", "Dan", "", false),
   new BibleBook(28, "Oseas", "Os", "", false),
   new BibleBook(29, "Joel", "Joe", "", false),
@@ -527,7 +527,7 @@ function create_menu() {
   menu
     .addSubMenu(bibleSubMenu)
     .addSeparator()
-    .addItem("📝  Study tools", "study_tools")
+    .addItem("📝  Study tools", "study_tools")
     .addToUi();
 }
 
@@ -691,7 +691,7 @@ function bibleLinker(bible_version) {
       searchBible(
         book.getName(),
         result,
-      book,
+        book,
         erroneousLines,
         currentBibleVersion
       );
@@ -875,7 +875,7 @@ function parseBibleText(
         if (isSingleChapter) {
           let verseStartRegEx = bibleText.match(/\s[0-9]+/);
           let verseEndRegEx = bibleText.match(/[0-9]+\s*$/);
-          if (verseStartRegEx && verseEndRegEx) {
+          if (verseStartRegEx && verse_end) {
             verse_start = verseStartRegEx.toString();
             verse_end = verseEndRegEx.toString();
           } else {
