@@ -784,7 +784,8 @@ function parseBibleText(
             chapters[0] = 1;
             chapters[1] = 1;
           } else {
-            chapters = bibleText[0].match(/[0-9]+:/g);
+            let validChapters = bibleText[0].match(/[/0-9]+:\d/g).join();
+            chapters = validChapters.match(/[0-9]+:/g);
             if (chapters.length == 1) {
               chapters[0] = chapters[0].replace(":", "");
               chapters[1] = chapters[0];
@@ -797,7 +798,7 @@ function parseBibleText(
           // Get verse(s)
           if (bibleText[m].includes(":")) {
             let verseStartRegEx = bibleText[m].match(/:[0-9]+/);
-            let verseEndRegEx = bibleText[m].match(/[0-9]+\s*$/);
+            let verseEndRegEx = bibleText[m].match(/[0-9]+[:\s]*$/);
             if (verseStartRegEx && verseEndRegEx) {
               verse_start = verseStartRegEx.toString().replace(":", "");
               verse_end = verseEndRegEx.toString().replace(":", "");
@@ -806,7 +807,7 @@ function parseBibleText(
             }
           } else {
             let verseStartRegEx = bibleText[m].match(/\s[0-9]+/);
-            let verseEndRegEx = bibleText[m].match(/[0-9]+\s*$/);
+            let verseEndRegEx = bibleText[m].match(/[0-9]+[:\s]*$/);
             if (verseStartRegEx && verseEndRegEx) {
               verse_start = verseStartRegEx.toString();
               verse_end = verseEndRegEx.toString();
@@ -861,7 +862,8 @@ function parseBibleText(
           chapters[0] = 1;
           chapters[1] = 1;
         } else {
-          chapters = bibleText.match(/[0-9]+:/g);
+          let validChapters = bibleText.match(/[/0-9]+:\d/g).join();
+          chapters = validChapters.match(/[0-9]+:/g);
           if (chapters.length == 1) {
             chapters[0] = chapters[0].replace(":", "");
             chapters[1] = chapters[0];
@@ -874,8 +876,8 @@ function parseBibleText(
         let hasErrorParsing = false;
         if (isSingleChapter) {
           let verseStartRegEx = bibleText.match(/\s[0-9]+/);
-          let verseEndRegEx = bibleText.match(/[0-9]+\s*$/);
-          if (verseStartRegEx && verse_end) {
+          let verseEndRegEx = bibleText.match(/[0-9]+[:\s]*$/);
+          if (verseStartRegEx && verseEndRegEx) {
             verse_start = verseStartRegEx.toString();
             verse_end = verseEndRegEx.toString();
           } else {
@@ -883,7 +885,7 @@ function parseBibleText(
           }
         } else {
           let verseStartRegEx = bibleText.match(/:[0-9]+/);
-          let verseEndRegEx = bibleText.match(/[0-9]+\s*$/);
+          let verseEndRegEx = bibleText.match(/[0-9]+[:\s]*$/);
           if (verseStartRegEx && verseEndRegEx) {
             verse_start = verseStartRegEx.toString().replace(":", "");
             verse_end = verseEndRegEx.toString().replace(":", "");
@@ -1116,49 +1118,49 @@ function getBibleVersions() {
 
 function study_tools() {
   var html_content = `
-              <style>
-                html {font-family: "Open Sans", Arial, sans-serif;}
-            
-                li {padding: 0 0 20px 0;}
-            
-                .button {
-                  background-color: #326B8C;
-                  border: 2px solid #326B8C;
-                  border-radius: 8px;
-                  font-weight: bold;
-                  color: #FFF;
-                  text-align: center;
-                  text-decoration: none;
-                  font-size: 16px;
-                  margin: 30px auto 10px auto;
-                  padding: 12px 24px;
-                  display:block;
-                  transition-duration: 0.4s;
-                  cursor: pointer;
-                }
-            
-                .button:hover {
-                  box-shadow: 0 6px 16px 0 rgba(0,0,0,0.24), 0 9px 50px 0 rgba(0,0,0,0.19);
-                }
-            
-                .button:active {
-                  box-shadow: 0 2px 50px 0 rgba(0,0,0,0.24), 0 5px 10px 0 rgba(0,0,0,0.19);
-                  transform: translateY(4px);
-                }
-              </style>
+                <style>
+                  html {font-family: "Open Sans", Arial, sans-serif;}
               
-              <base target="_blank">
-            
-              <p>Tools to help you get a deeper understanding of the Bible:</p>
-            
-              <ul>
-                <li><strong><a href="https://wol.jw.org/">Watchtower Online Library</a> (WOL)</strong> - A research tool to find explanatory articles about Bible verses and topics.</li>
-                <li><strong><a href="https://www.jw.org/finder?docid=802013025">JW Library</a></strong> - Bible library in your pocket.</li>
-                <li><strong><a href="https://www.jw.org/finder?docid=1011539">Study tools</a></strong> on <a href="https://www.jw.org/">jw.org</a>.</li>
-              </ul>
-            
-              <input class="button" type="button" value="Got it!" onClick="google.script.host.close()" />
-              `;
+                  li {padding: 0 0 20px 0;}
+              
+                  .button {
+                    background-color: #326B8C;
+                    border: 2px solid #326B8C;
+                    border-radius: 8px;
+                    font-weight: bold;
+                    color: #FFF;
+                    text-align: center;
+                    text-decoration: none;
+                    font-size: 16px;
+                    margin: 30px auto 10px auto;
+                    padding: 12px 24px;
+                    display:block;
+                    transition-duration: 0.4s;
+                    cursor: pointer;
+                  }
+              
+                  .button:hover {
+                    box-shadow: 0 6px 16px 0 rgba(0,0,0,0.24), 0 9px 50px 0 rgba(0,0,0,0.19);
+                  }
+              
+                  .button:active {
+                    box-shadow: 0 2px 50px 0 rgba(0,0,0,0.24), 0 5px 10px 0 rgba(0,0,0,0.19);
+                    transform: translateY(4px);
+                  }
+                </style>
+                
+                <base target="_blank">
+              
+                <p>Tools to help you get a deeper understanding of the Bible:</p>
+              
+                <ul>
+                  <li><strong><a href="https://wol.jw.org/">Watchtower Online Library</a> (WOL)</strong> - A research tool to find explanatory articles about Bible verses and topics.</li>
+                  <li><strong><a href="https://www.jw.org/finder?docid=802013025">JW Library</a></strong> - Bible library in your pocket.</li>
+                  <li><strong><a href="https://www.jw.org/finder?docid=1011539">Study tools</a></strong> on <a href="https://www.jw.org/">jw.org</a>.</li>
+                </ul>
+              
+                <input class="button" type="button" value="Got it!" onClick="google.script.host.close()" />
+                `;
 
   var htmlOutput = HtmlService.createHtmlOutput(html_content);
   DocumentApp.getUi().showModalDialog(htmlOutput, "Bible study tools");
