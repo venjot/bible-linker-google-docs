@@ -196,28 +196,30 @@ const spanishBibleBooks = new BibleLanguage("Spanish", "es", [
   new BibleBook(2, "Éxodo", "Éx", "", false),
   new BibleBook(3, "Levítico", "Le", "", false),
   new BibleBook(4, "Números", "Nú", "", false),
-  new BibleBook(5, "Deuteronomio", "Dt", "", false),
+  new BibleBook(5, "Deuteronomio", "Dt", "Deut.", false),
   new BibleBook(6, "Josué", "Jos", "", false),
   new BibleBook(7, "Jueces", "Jue", "", false),
   new BibleBook(8, "Rut", "", "", false),
   new BibleBook(9, "1 Samuel", "1Sa", "", false),
   new BibleBook(10, "2 Samuel", "2Sa", "", false),
-  new BibleBook(11, "1 Reyes", "1Re", "", false),
-  new BibleBook(12, "2 Reyes", "2Re", "", false),
+  new BibleBook(11, "1 Reyes", "1 Rey.", "1Re", false),
+  new BibleBook(12, "2 Reyes", "2 Rey.", "2Re", false),
   new BibleBook(13, "1 Cronica", "1Cr", "", false),
   new BibleBook(14, "2 Cronica", "2Cr", "", false),
   new BibleBook(15, "Esdras", "Esd", "", false),
   new BibleBook(16, "Nehemías", "Ne", "", false),
   new BibleBook(17, "Ester", "Est", "", false),
   new BibleBook(18, "Job", "", "", false),
-  new BibleBook(19, "Salmos", "Sl", "", false),
-  new BibleBook(20, "Proverbios", "Pr", "", false),
-  new BibleBook(21, "Eclesiastés", "Ec", "", false),
+  new BibleBook(19, "Salmos", "Salmo", "Sl", false),
+  new BibleBook(19, "", "", "Sal.", false),
+  new BibleBook(20, "Proverbios", "Prov.", "Pr", false),
+  new BibleBook(21, "Eclesiastés", "Ec", "Ecl.", false),
   new BibleBook(22, "El Cantar de los Cantares", "Can", "", false),
   new BibleBook(23, "Isaías", "Is", "Isa", false),
+  new BibleBook(23, "", "Is.", "", false),
   new BibleBook(24, "Jeremías", "Jer", "", false),
   new BibleBook(25, "Lamentaciones", "Lam", "", false),
-  new BibleBook(26, "Ezequiel", "Eze", "", false),
+  new BibleBook(26, "Ezequiel", "Eze", "Ezeq.", false),
   new BibleBook(27, "Daniel", "Da", "", false),
   new BibleBook(28, "Oseas", "Os", "", false),
   new BibleBook(29, "Joel", "Joe", "", false),
@@ -231,33 +233,34 @@ const spanishBibleBooks = new BibleLanguage("Spanish", "es", [
   new BibleBook(37, "Ageo", "Ag", "", false),
   new BibleBook(38, "Zacarías", "Zac", "", false),
   new BibleBook(39, "Malaquías", "Mal", "", false),
-  new BibleBook(40, "Mateo", "Mt", "", false),
-  new BibleBook(41, "Marcos", "Mr", "", false),
-  new BibleBook(42, "Lucas", "Lu", "", false),
+  new BibleBook(40, "Mateo", "Mt", "Mat.", false),
+  new BibleBook(41, "Marcos", "Mr", "Mar.", false),
+  new BibleBook(42, "Lucas", "Lu", "Luc.", false),
   new BibleBook(43, "Juan", "Jn", "", false),
-  new BibleBook(44, "Hechos", "Hch", "", false),
-  new BibleBook(45, "Romanos", "Ro", "", false),
+  new BibleBook(44, "Hechos", "Hch", "Hech.", false),
+  new BibleBook(45, "Romanos", "Ro", "Rom.", false),
   new BibleBook(46, "1 Corintios", "1Co", "", false),
   new BibleBook(47, "2 Corintios", "2Co", "", false),
   new BibleBook(48, "Gálatas", "Gál", "", false),
-  new BibleBook(49, "Efesios", "Ef", "", false),
+  new BibleBook(49, "Efesios", "Ef", "Efes.", false),
   new BibleBook(50, "Filipenses", "Flp", "", false),
   new BibleBook(51, "Colosenses", "Col", "", false),
-  new BibleBook(52, "1 Tesalonicenses", "1Te", "", false),
-  new BibleBook(53, "2 Tesalonicenses", "2Te", "", false),
+  new BibleBook(52, "1 Tesalonicenses", "1Te", "1 Tes.", false),
+  new BibleBook(53, "2 Tesalonicenses", "2Te", "2 Tes.", false),
   new BibleBook(54, "1 Timoteo", "1Ti", "", false),
   new BibleBook(55, "2 Timoteo", "2Ti", "", false),
   new BibleBook(56, "Tito", "Tit", "", false),
   new BibleBook(57, "Filemón", "Flm", "", true),
-  new BibleBook(58, "Hebreos", "Heb", "", false),
-  new BibleBook(59, "Santiago", "Snt", "", false),
+  new BibleBook(58, "Hebreos", "Heb", "Heb.", false),
+  new BibleBook(59, "Santiago", "Snt", "Sant.", false),
   new BibleBook(60, "1 Pedro", "1Pe", "", false),
   new BibleBook(61, "2 Pedro", "2Pe", "", false),
   new BibleBook(62, "1 Juan", "1Jn", "", false),
   new BibleBook(63, "2 Juan", "2Jn", "", true),
   new BibleBook(64, "3 Juan", "3Jn", "", true),
   new BibleBook(65, "Judas", "Jud", "", true),
-  new BibleBook(66, "Apocalipsis", "Ap", "Rev", false),
+  new BibleBook(66, "Apocalipsis", "Ap", "Apoc.", false),
+  new BibleBook(66, "Revelación", "Rev", "", false),
 ]);
 
 class Bible {
@@ -665,29 +668,34 @@ function bibleLinker(bible_version) {
   var err_msg1 = "There was an error processing this verse:\n\n";
   var err_msg2 = "\n\nIs there a typo? (Tip: It's usually the spaces.)";
   for (let result of documentSearchResult) {
-    for (let book of currentBibleVersion.getLanguage().getBooks()) {
-      if (book.getAbbr1() != "") {
-        searchBible(
-          book.getAbbr1(),
-          result,
-          book,
-          erroneousLines,
-          currentBibleVersion
-        );
-      }
+    for (let book of currentBibleVersion
+      .getLanguage()
+      .getBooks()
+      .filter((b) => b.getAbbr1() != "")) {
+      searchBible(
+        book.getAbbr1(),
+        result,
+        book,
+        erroneousLines,
+        currentBibleVersion
+      );
     }
-    for (let book of currentBibleVersion.getLanguage().getBooks()) {
-      if (book.getAbbr2() != "") {
-        searchBible(
-          book.getAbbr2(),
-          result,
-          book,
-          erroneousLines,
-          currentBibleVersion
-        );
-      }
+    for (let book of currentBibleVersion
+      .getLanguage()
+      .getBooks()
+      .filter((b) => b.getAbbr2() != "")) {
+      searchBible(
+        book.getAbbr2(),
+        result,
+        book,
+        erroneousLines,
+        currentBibleVersion
+      );
     }
-    for (let book of currentBibleVersion.getLanguage().getBooks()) {
+    for (let book of currentBibleVersion
+      .getLanguage()
+      .getBooks()
+      .filter((b) => b.getName() != "")) {
       searchBible(
         book.getName(),
         result,
