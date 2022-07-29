@@ -545,10 +545,10 @@ for (let bibleVersion of bibleVersions) {
 }
 
 function getBibleSearchResult(result, search, isSingleChapter) {
-  let searchString = "(?i)" + search + " [0-9]+:[0-9 ,;:-]+";
+  let searchString = "(?i)" + search + " [0-9]+:[0-9 ,;:–-]+";
   Logger.log("searchString :" + searchString);
   if (isSingleChapter) {
-    searchString = "(?i)" + search + " [0-9 ,-]+";
+    searchString = "(?i)" + search + " [0-9 ,–-]+";
   }
   let bibleSearchResult = new Array();
   var searchResult = result.getSearchElement().findText(searchString);
